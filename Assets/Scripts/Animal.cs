@@ -5,28 +5,40 @@ using UnityEngine;
 public class Animal : MonoBehaviour
 {
     public float hp;
-    public float speed;
     public float stamina;
 
+    // поле, характерное для взаимодействия агентов друг с другом
+    public float speed;
+
+    // поля, характерные для устойчивостей условиям окружающей среды
     public float temp_resist;
     public float wet_resist;
-    public float eat_need = 1.2f;       // смотреть в зависимости от количества генериремой еды в текущем режиме
+    public float eat_need = 1.2f;       // смотреть в зависимости от количества генерируемой еды в текущем режиме
 
+    // фитнес агента
+    public float score;
+    
     public virtual List<float> GetCharacteristics()
     {
         return new List<float>
         {
             hp,
-            speed,
             stamina,
-            temp_resist
+            speed,
+            temp_resist,
+            wet_resist,
+            eat_need
         };
     }
+
 }
 
 public class Predator : Animal
 {
-    public float hunt_ability;
+    public float hunt_ability
+    {
+        get { return speed + stamina; }
+    }
 
     public void Kill(Herbivore prey) // либо список из Herbivore передаем
     {
@@ -53,7 +65,11 @@ public class Predator : Animal
 
 public class Herbivore : Animal
 {
-    public float escape_ability;
+    public float escape_ability
+    {
+        get { return speed + stamina; }
+    }
+
     // у травоядного пока нет способности к запасу (а-ля настолка Эволюция - у животного нет фишки жира)
     // просто иначе как ему в хардовом режиме вообще выжить? у хищника хотя бы охота есть
 }

@@ -28,6 +28,9 @@ public class Environment : MonoBehaviour
     public float eat_predator;
     public float eat_herbivore;
 
+    public int generation_now = 0;
+    public int generation_max = 50;
+
     public float TempCalc(float temp, float wet, float wind_strength)
     {
         temp = 37 - ((37 - temp) / (0.68f - 0.0014f * wet + (1 / (1.76f + 1.4f * Mathf.Pow(wind_strength, 0.75f)))));       // из формулы эквивалентно-эффективной температуры - ПРОВЕРИТЬ ЕЩЕ АДЕКВАТНОСТЬ ЦИФР
@@ -36,7 +39,21 @@ public class Environment : MonoBehaviour
 
     public void Initialize()
     {
-        
+        if (generation_now != 0)
+        {
+            // Определяем сложность с вероятностями
+            float r = Random.value;   // от 0 до 1
+
+            if (r < 0.7f)
+                difficultyMode = DifficultyMode.easyMode;         // 70%
+            else if (r < 0.9f)
+                difficultyMode = DifficultyMode.mediumMode;       // 20%
+            else
+                difficultyMode = DifficultyMode.hardMode;         // 10%
+
+            GenerateConditions();
+            temp = TempCalc(temp, wet, wind_strength);
+        }
     }
 
     public void GenerateConditions()
