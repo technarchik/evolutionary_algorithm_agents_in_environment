@@ -14,6 +14,7 @@ public class Animal : MonoBehaviour
     public float temp_resist;
     public float wet_resist;
     public float eat_need = 1.2f;       // смотреть в зависимости от количества генерируемой еды в текущем режиме
+                                        // оно меняется в ГА, но нужно будет задать предельные интервалы, в которых оно будет меняться, чтобы не перебустить животное
 
     // фитнес агента
     public float score;
