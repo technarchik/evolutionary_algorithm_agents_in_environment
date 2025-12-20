@@ -23,6 +23,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
     [Range(0f, 1f)] public float crossoverRate = 0.9f;
     public int elitismCount = 2;
     public int tournamentSize = 3;
+    public int staminaUpdateInterval = 5;
 
     [Header("Initial ranges")]
     public TraitRange staminaRange = new TraitRange(5f, 20f);
@@ -30,16 +31,21 @@ public class GeneticAlgorithm1 : MonoBehaviour
     public TraitRange tempResistRange = new TraitRange(0f, 1f);
     public TraitRange wetResistRange = new TraitRange(0f, 1f);
     public TraitRange eatNeedRange = new TraitRange(0.5f, 2f);
-     
+    public float noiseOfMutation = 0.1f;
+
     // 2 populations that keep predators and herbivores separately
     private List<Predator> predators = new List<Predator>();
     private List<Herbivore> herbivores = new List<Herbivore>();
 
+    // another lists of genes for the next generation
+    private List<List<float>> genesNextGenPredators = new List<List<float>>();
+    private List<List<float>> genesNextGenHerbivores = new List<List<float>>();
 
 
     private void Start()
     {
-        
+        InitializeEnvironment();
+        InitializePopulations();        
     }
 
 
@@ -68,6 +74,15 @@ public class GeneticAlgorithm1 : MonoBehaviour
             CreateGenes(predatorObject);
             predators.Add(predatorObject);
         }
+
+        for (int i = 0; i < herbivoreCount; i++)
+        {
+            var createHerbivoreObject = Instantiate(herbivorePrefab);
+            var herbivoreObject = createHerbivoreObject.GetComponent<Herbivore>();
+            if (herbivoreObject == null) herbivoreObject.AddComponent<Herbivore>();
+            CreateGenes(herbivoreObject);
+            herbivores.Add(herbivoreObject);
+        }
     }
 
     void CreateGenes(Animal animal)
@@ -83,12 +98,54 @@ public class GeneticAlgorithm1 : MonoBehaviour
     #endregion
 
 
-    #region Natural Selection
+    #region Step of generation
+
+    public void StepOfGeneration()
+    {
+        // need to count fitnesses for animals
+        EvaluateFitnessPredator();
+        EvaluateFitnessHerbivore();
+
+        // evolution of animals
+        EvolvePredator();
+        EvolveHerbivore();
+
+        // counter of generations ------ should it be right there or be the first in alg ??
+        currentGenerationInEnv++;
+
+        // changing environment
+        if (currentGenerationInEnv >= generationPerEnv)
+        {
+            InitializeEnvironment();
+        }
+
+        // (de)buffing the stamina every staminaUpdateInterval
+        if (currentGenerationInEnv % staminaUpdateInterval == 0)
+        {
+            ChangeStamina(predators);
+            ChangeStamina(herbivores);
+        }
+
+        // writing genes to new population
+        ApplyNextGeneration(predators, genesNextGenPredators);
+        ApplyNextGeneration(herbivores, genesNextGenHerbivores);
+    }
 
     #endregion
 
 
     #region GA algorithm
+
+    void EvolvePredator()
+    {
+        genesNextGenPredators = EvolveAnimals(predators);
+    }
+
+    void EvolveHerbivore()
+    {
+        genesNextGenHerbivores = EvolveAnimals(herbivores);
+    }
+
     // method for evolving classes from Animal - doesnt matter what type
     List<List<float>> EvolveAnimals<T>(List<T> animals) where T : Animal 
     {
@@ -170,11 +227,12 @@ public class GeneticAlgorithm1 : MonoBehaviour
         }
     }
 
-    void EvaluateFitnessInEnvironment(Animal animal)
+    void EvaluateFitnessInEnvironment(Animal animal) // ---------------?
     {
         float tempFit;
         float wetFit;
     }
+
     #endregion
 
 
@@ -204,10 +262,10 @@ public class GeneticAlgorithm1 : MonoBehaviour
             if (Random.value < mutationRate)
             {
                 // VARIANT 1: without checking allowed interval
-                // gene[i] += Random.Range(-0.1f, 0.1f); 
+                // gene[i] += Random.Range(-noiseOfMutation, noiseOfMutation); 
 
                 // VARIANT 2: with checking allowed interval
-                float noise = Random.Range(-0.1f, 0.1f);
+                float noise = Random.Range(-noiseOfMutation, noiseOfMutation);
                 gene[i] += noise;
 
                 switch(i)
@@ -240,19 +298,21 @@ public class GeneticAlgorithm1 : MonoBehaviour
     #endregion
 
 
-    #region Sort algorithm
+    #region Stamina
 
-    #endregion
-
-
-    #region Elitism algorithm
+    public void ChangeStamina<T>(List<T> list) where T : Animal
+    {
+        foreach (var animal in list)
+            animal.stamina = Mathf.Clamp(animal.stamina + Random.Range(-1f, 1f), staminaRange.min, staminaRange.max);   // should allow to minus the stamina ??
+    }
 
     #endregion
 
 
     #region Helpers
+    // struct for applying intervals of characteristics
     // [System.Serializable]
-    public struct TraitRange        // struct for applying intervals
+    public struct TraitRange        
     {
         public float min, max;
         public TraitRange(float min, float max) 
@@ -261,6 +321,21 @@ public class GeneticAlgorithm1 : MonoBehaviour
             this.max = max; 
         }
     }
+
+    // method for rewriting genes in new population
+    void ApplyNextGeneration<T>(List<T> animals, List<List<float>> genes) where T : Animal
+    {
+        for (int i = 0; i < animals.Count; i++)
+        {
+            animals[i].stamina = genes[i][0];
+            animals[i].speed = genes[i][1];
+            animals[i].temp_resist = genes[i][2];
+            animals[i].wet_resist = genes[i][3];
+            animals[i].eat_need = genes[i][4];
+            animals[i].score = 0f;
+        }
+    }
+
     #endregion
 }
 
