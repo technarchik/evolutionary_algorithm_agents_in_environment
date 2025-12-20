@@ -14,10 +14,6 @@ public class GeneticAlgorithm1 : MonoBehaviour
     public int predatorCount = 25;
     public int herbivoreCount = 25;
 
-    [Header("Generations")]
-    public int generationPerEnv = 50;
-    public int currentGenerationInEnv = 0;
-
     [Header("GA parameters")]
     [Range(0f, 1f)] public float mutationRate = 0.05f;
     [Range(0f, 1f)] public float crossoverRate = 0.9f;
@@ -54,7 +50,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
     void InitializeEnvironment()
     {
         env.Initialize();
-        currentGenerationInEnv = 0;
+        env.currentGenerationInEnv = 0;
     }
 
     void InitializePopulations()
@@ -90,9 +86,9 @@ public class GeneticAlgorithm1 : MonoBehaviour
         animal.hp = 100f;
         animal.stamina = Random.Range(staminaRange.min, staminaRange.max);
         animal.speed = Random.Range(speedRange.min, speedRange.max);
-        animal.temp_resist = Random.Range(tempResistRange.min, tempResistRange.max);
-        animal.wet_resist = Random.Range(wetResistRange.min, wetResistRange.max);
-        animal.eat_need = Random.Range(eatNeedRange.min, eatNeedRange.max);
+        animal.tempResist = Random.Range(tempResistRange.min, tempResistRange.max);
+        animal.wetResist = Random.Range(wetResistRange.min, wetResistRange.max);
+        animal.eatNeed = Random.Range(eatNeedRange.min, eatNeedRange.max);
     }
 
     #endregion
@@ -111,16 +107,16 @@ public class GeneticAlgorithm1 : MonoBehaviour
         EvolveHerbivore();
 
         // counter of generations ------ should it be right there or be the first in alg ??
-        currentGenerationInEnv++;
+        env.currentGenerationInEnv++;
 
         // changing environment
-        if (currentGenerationInEnv >= generationPerEnv)
+        if (env.currentGenerationInEnv >= env.generationMax) 
         {
             InitializeEnvironment();
         }
 
         // (de)buffing the stamina every staminaUpdateInterval
-        if (currentGenerationInEnv % staminaUpdateInterval == 0)
+        if (env.currentGenerationInEnv % staminaUpdateInterval == 0)
         {
             ChangeStamina(predators);
             ChangeStamina(herbivores);
@@ -189,7 +185,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
 
     List<float> TakeGenesFromAnimal(Animal animal)
     {
-        List<float> geneList = new List<float> { animal.stamina, animal.speed, animal.temp_resist, animal.wet_resist, animal.eat_need};
+        List<float> geneList = new List<float> { animal.stamina, animal.speed, animal.tempResist, animal.wetResist, animal.eatNeed};
         return geneList;
     }
 
@@ -329,14 +325,12 @@ public class GeneticAlgorithm1 : MonoBehaviour
         {
             animals[i].stamina = genes[i][0];
             animals[i].speed = genes[i][1];
-            animals[i].temp_resist = genes[i][2];
-            animals[i].wet_resist = genes[i][3];
-            animals[i].eat_need = genes[i][4];
+            animals[i].tempResist = genes[i][2];
+            animals[i].wetResist = genes[i][3];
+            animals[i].eatNeed = genes[i][4];
             animals[i].score = 0f;
         }
     }
 
     #endregion
 }
-
-

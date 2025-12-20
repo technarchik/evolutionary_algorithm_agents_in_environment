@@ -11,14 +11,14 @@ public class Animal : MonoBehaviour
     public float speed;
 
     // поля, характерные для устойчивостей условиям окружающей среды
-    public float temp_resist;
-    public float wet_resist;
-    public float eat_need = 1.2f;       // смотреть в зависимости от количества генерируемой еды в текущем режиме
+    public float tempResist;
+    public float wetResist;
+    public float eatNeed = 1.2f;       // смотреть в зависимости от количества генерируемой еды в текущем режиме
                                         // оно меняется в ГА, но нужно будет задать предельные интервалы, в которых оно будет меняться, чтобы не перебустить животное
 
     // фитнес агента
     public float score;
-    
+
     public virtual List<float> GetCharacteristics()
     {
         return new List<float>
@@ -26,9 +26,9 @@ public class Animal : MonoBehaviour
             hp,
             stamina,
             speed,
-            temp_resist,
-            wet_resist,
-            eat_need
+            tempResist,
+            wetResist,
+            eatNeed
         };
     }
 
@@ -36,7 +36,7 @@ public class Animal : MonoBehaviour
 
 public class Predator : Animal
 {
-    public float hunt_ability
+    public float huntAbility
     {
         get { return speed + stamina; }
     }
@@ -66,7 +66,7 @@ public class Predator : Animal
 
 public class Herbivore : Animal
 {
-    public float escape_ability
+    public float escapeAbility
     {
         get { return speed + stamina; }
     }
