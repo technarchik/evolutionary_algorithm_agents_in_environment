@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
@@ -17,6 +18,8 @@ public class GeneticAlgorithm1 : MonoBehaviour
     [Header("GA parameters")]
     [Range(0f, 1f)] public float mutationRate = 0.05f;
     [Range(0f, 1f)] public float crossoverRate = 0.9f;
+    public int firstDeltaHPLose = 10;
+    public int secondDeltaHPLose = 20;
     public int elitismCount = 2;
     public int tournamentSize = 3;
     public int staminaUpdateInterval = 5;
@@ -37,13 +40,70 @@ public class GeneticAlgorithm1 : MonoBehaviour
     private List<List<float>> genesNextGenPredators = new List<List<float>>();
     private List<List<float>> genesNextGenHerbivores = new List<List<float>>();
 
+    [Header("Simulation time")]
+    [SerializeField] private float timeForOneGeneration = 1.0f; // how much seconds for one generation
+    [SerializeField] private float simulationSpeed = 1.0f;      // multiply for speed
+
+    private float generationTimer = 0f;
+    private bool simulationIsRunning = false;
+
+    private long k = 0; //update counter
+
+    public static event Action PopulationCreated;
+
+
+    private void Awake()
+    {
+        //StartCoroutine(DelayUpdate());
+        InitializeEnvironment();
+        InitializePopulations();
+        PopulationCreated?.Invoke();
+    }
 
     private void Start()
     {
-        InitializeEnvironment();
-        InitializePopulations();        
+        Debug.Log("Start");
     }
 
+    IEnumerator DelayUpdate()
+    {
+        Debug.Log("DelayUpdate");
+        yield return new WaitForSeconds(100f);
+        simulationIsRunning = true;
+    }
+
+    //private void Update()
+    //{
+    //    Debug.Log("Update");
+    //    if (!simulationIsRunning)
+    //        return;
+    //    generationTimer += Time.deltaTime * simulationSpeed;
+
+    //    if (generationTimer >= timeForOneGeneration)
+    //    {
+    //        generationTimer = 0f;
+    //        StepOfGeneration();
+    //    }
+    //}
+
+    private void FixedUpdate()
+    {
+        if (k % 5 == 0)  //update only once per 5 physics updates
+        {
+            k = 0;
+            //Debug.Log("FixedUpdate");
+            if (!simulationIsRunning)
+                return;
+            generationTimer += Time.deltaTime * simulationSpeed;
+
+            if (generationTimer >= timeForOneGeneration)
+            {
+                generationTimer = 0f;
+                StepOfGeneration();
+            }
+        }
+        k++;
+    }
 
     #region Initialization
 
@@ -70,6 +130,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
             CreateGenes(predatorObject);
             predators.Add(predatorObject);
         }
+        Debug.Log("Predators are ready");
 
         for (int i = 0; i < herbivoreCount; i++)
         {
@@ -79,16 +140,17 @@ public class GeneticAlgorithm1 : MonoBehaviour
             CreateGenes(herbivoreObject);
             herbivores.Add(herbivoreObject);
         }
+        Debug.Log("Herbivores are ready");
     }
 
     void CreateGenes(Animal animal)
     {
         animal.hp = 100f;
-        animal.stamina = Random.Range(staminaRange.min, staminaRange.max);
-        animal.speed = Random.Range(speedRange.min, speedRange.max);
-        animal.tempResist = Random.Range(tempResistRange.min, tempResistRange.max);
-        animal.wetResist = Random.Range(wetResistRange.min, wetResistRange.max);
-        animal.eatNeed = Random.Range(eatNeedRange.min, eatNeedRange.max);
+        animal.stamina = UnityEngine.Random.Range(staminaRange.min, staminaRange.max);
+        animal.speed = UnityEngine.Random.Range(speedRange.min, speedRange.max);
+        animal.tempResist = UnityEngine.Random.Range(tempResistRange.min, tempResistRange.max);
+        animal.wetResist = UnityEngine.Random.Range(wetResistRange.min, wetResistRange.max);
+        animal.eatNeed = UnityEngine.Random.Range(eatNeedRange.min, eatNeedRange.max);
     }
 
     #endregion
@@ -106,15 +168,6 @@ public class GeneticAlgorithm1 : MonoBehaviour
         EvolvePredator();
         EvolveHerbivore();
 
-        // counter of generations ------ should it be right there or be the first in alg ??
-        env.currentGenerationInEnv++;
-
-        // changing environment
-        if (env.currentGenerationInEnv >= env.generationMax) 
-        {
-            InitializeEnvironment();
-        }
-
         // (de)buffing the stamina every staminaUpdateInterval
         if (env.currentGenerationInEnv % staminaUpdateInterval == 0)
         {
@@ -125,6 +178,8 @@ public class GeneticAlgorithm1 : MonoBehaviour
         // writing genes to new population
         ApplyNextGeneration(predators, genesNextGenPredators);
         ApplyNextGeneration(herbivores, genesNextGenHerbivores);
+
+        env.NextGeneration();
     }
 
     #endregion
@@ -168,7 +223,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
             var genesFather = TakeGenesFromAnimal(father);
 
             // crossover mechanism
-            if (Random.value < crossoverRate)
+            if (UnityEngine.Random.value < crossoverRate)
                 CrossoverAlgorithm(genesMother, genesFather);
 
             // mutation mechanism
@@ -195,7 +250,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
         // may be can write this method another way
         for (int i = 0; i < tournamentSize; i++) 
         {
-            var c = list[Random.Range(0, list.Count)];
+            var c = list[UnityEngine.Random.Range(0, list.Count)];
             if (bestAnimal == null || c.score > bestAnimal.score)
                 bestAnimal = c;
         }
@@ -212,6 +267,9 @@ public class GeneticAlgorithm1 : MonoBehaviour
         foreach (var predator in predators)
         {
             // must count, what important for predators?
+            //float envFit = EnvFitness(p);
+            float huntFit = predator.huntAbility;
+            predator.score = 0.5f + huntFit * 0.5f;
         }
     }
 
@@ -229,6 +287,15 @@ public class GeneticAlgorithm1 : MonoBehaviour
         float wetFit;
     }
 
+    void CalculateHPPredator()
+    {
+        
+        foreach(var predator in predators)
+        {
+            predator.hp = 0;
+        }
+    }
+
     #endregion
 
 
@@ -237,7 +304,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
     void CrossoverAlgorithm(List<float> mother, List<float> father)
     {
         // VARIANT 1: single point crossover
-        int point = Random.Range(1, mother.Count);
+        int point = UnityEngine.Random.Range(1, mother.Count);
         for (int i = point; i < mother.Count; i++)
         {
             float temp = mother[i];
@@ -255,13 +322,13 @@ public class GeneticAlgorithm1 : MonoBehaviour
     {
         for (int i = 0; i < gene.Count; i++)
         {
-            if (Random.value < mutationRate)
+            if (UnityEngine.Random.value < mutationRate)
             {
                 // VARIANT 1: without checking allowed interval
-                // gene[i] += Random.Range(-noiseOfMutation, noiseOfMutation); 
+                // gene[i] += UnityEngine.Random.Range(-noiseOfMutation, noiseOfMutation); 
 
                 // VARIANT 2: with checking allowed interval
-                float noise = Random.Range(-noiseOfMutation, noiseOfMutation);
+                float noise = UnityEngine.Random.Range(-noiseOfMutation, noiseOfMutation);
                 gene[i] += noise;
 
                 switch(i)
@@ -286,7 +353,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
 
                 // VARIANT 3: mutaion adapting to difficultyMode of the env
                 // float envFactor = env.difficultyMode == Environment.DifficultyMode.hardMode ? 0.2f : 0.05f;
-                // float delta = Random.Range(-envFactor, envFactor);
+                // float delta = UnityEngine.Random.Range(-envFactor, envFactor);
             }
         }
     }
@@ -295,11 +362,11 @@ public class GeneticAlgorithm1 : MonoBehaviour
 
 
     #region Stamina
-
+    // or plus 5?
     public void ChangeStamina<T>(List<T> list) where T : Animal
     {
         foreach (var animal in list)
-            animal.stamina = Mathf.Clamp(animal.stamina + Random.Range(-1f, 1f), staminaRange.min, staminaRange.max);   // should allow to minus the stamina ??
+            animal.stamina = Mathf.Clamp(animal.stamina + UnityEngine.Random.Range(-1f, 1f), staminaRange.min, staminaRange.max);   // should allow to minus the stamina ??
     }
 
     #endregion
@@ -329,7 +396,36 @@ public class GeneticAlgorithm1 : MonoBehaviour
             animals[i].wetResist = genes[i][3];
             animals[i].eatNeed = genes[i][4];
             animals[i].score = 0f;
+
+            animals[i].UpdateUI();
         }
+    }
+
+    // reading value from slider in UI
+    public void SetSimulationSpeed(float speed)
+    {
+        simulationSpeed = speed;
+    }
+    #endregion
+
+
+    #region Actions
+
+    private void OnEnable()
+    {
+        Environment.OnEnvironmentChanged += OnEnvironmentChanged;
+    }
+
+    private void OnDisable()
+    {
+        Environment.OnEnvironmentChanged -= OnEnvironmentChanged;
+    }
+
+    // MAY BE DOESNT NEED IT - DESTROYING OLD LIST OF ANIMALS
+    void OnEnvironmentChanged()
+    {
+    //    if (env.currentGenerationInEnv == 0)
+    //        InitializePopulations();
     }
 
     #endregion

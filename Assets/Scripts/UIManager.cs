@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
@@ -16,10 +17,14 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TMP_Text foodPredText;
     [SerializeField] private TMP_Text foodHerbText;
     [SerializeField] private TMP_Text generationText;
-    [SerializeField] private TMP_Text era;                          // потом добавить здесь отображение!! #todo
+    [SerializeField] private TMP_Text era;
+
+    [SerializeField] private Slider speedSlider;
+    [SerializeField] private TMP_Text speedText;
+
     void Start()
     {
-        
+        speedSlider.onValueChanged.AddListener(OnSpeedChanged);
     }
 
     private void Update()
@@ -34,7 +39,25 @@ public class UIManager : MonoBehaviour
         windText.text = $"Wind: {environment.windStrength:F1}";
         foodPredText.text = $"Food (Predators): {environment.eatPredator:F0}";
         foodHerbText.text = $"Food (Herbivores): {environment.eatHerbivore:F0}";
-        generationText.text =
-            $"Generation: {environment.currentGenerationInEnv}/{environment.generationMax}";
+        generationText.text = $"Generation: {environment.currentGenerationInEnv}/{environment.generationMax}";
+        era.text = $"Era: {environment.era}";
+    }
+
+    void OnSpeedChanged(float value)
+    {
+        geneticAlgorithm1.SetSimulationSpeed(value);
+        speedText.text = $"Speed: x{value:F1}";
+    }
+
+    // здесь UIManager подписывается
+    private void OnEnable()
+    {
+        Environment.OnEnvironmentChanged += UpdateEnvironmentUI;
+    }
+
+    // а здесь отписывается
+    private void OnDisable()
+    {
+        Environment.OnEnvironmentChanged -= UpdateEnvironmentUI;
     }
 }

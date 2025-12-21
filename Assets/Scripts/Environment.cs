@@ -1,25 +1,28 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class Environment : MonoBehaviour
 {
-    [Header("Easy Mode Range")]
-    [SerializeField] float easyMin;
-    [SerializeField] float easyMax;
+    //[Header("Easy Mode Range")]
+    //[SerializeField] float easyMin;
+    //[SerializeField] float easyMax;
 
-    [Header("Medium Mode Range")]
-    [SerializeField] float mediumMin;
-    [SerializeField] float mediumMax;
+    //[Header("Medium Mode Range")]
+    //[SerializeField] float mediumMin;
+    //[SerializeField] float mediumMax;
 
-    [Header("Hard Mode Range")]
-    [SerializeField] float hardMin;
-    [SerializeField] float hardMax;
+    //[Header("Hard Mode Range")]
+    //[SerializeField] float hardMin;
+    //[SerializeField] float hardMax;
 
     [Header("Generations")]
     public int currentGenerationInEnv = 0;
     public int generationMax = 50;
     public int era = 0;
+
+    public static event Action OnEnvironmentChanged;
 
     public enum DifficultyMode
     {
@@ -33,11 +36,6 @@ public class Environment : MonoBehaviour
     public float eatPredator;
     public float eatHerbivore;
 
-    
-    private void Start()
-    {
-        
-    }
 
     public float TempCalc(float temp, float wet, float windStrength)
     {
@@ -47,14 +45,14 @@ public class Environment : MonoBehaviour
 
     public void Initialize()
     {
-        if (currentGenerationInEnv != 0)
+        if (era != 0)
         {
-            // ќпредел€ем сложность с веро€тност€ми
-            float r = Random.value;   // от 0 до 1
+            // set difficulty with probability
+            float random = UnityEngine.Random.value;   // from 0 to 1
 
-            if (r < 0.7f)
+            if (random < 0.7f)
                 difficultyMode = DifficultyMode.easyMode;         // 70%
-            else if (r < 0.9f)
+            else if (random < 0.9f)
                 difficultyMode = DifficultyMode.mediumMode;       // 20%
             else
                 difficultyMode = DifficultyMode.hardMode;         // 10%
@@ -62,7 +60,7 @@ public class Environment : MonoBehaviour
             GenerateConditions();
             temp = TempCalc(temp, wet, windStrength);
         }
-        else
+        else if (era == 0)
         {
             difficultyMode = DifficultyMode.easyMode;
             GenerateConditions();
@@ -75,26 +73,44 @@ public class Environment : MonoBehaviour
         switch (difficultyMode)
         {
             case DifficultyMode.easyMode:
-                temp = Random.Range(10, 20);        // если че, можно еще UnityEngine.Random.Range
-                wet = Random.Range(40, 55);
-                windStrength = Random.Range(0, 2);
-                eatPredator = Random.Range(50, 70);        // мб здесь тоже в зависимости от ветра и всего остального генерить диапазон? - »Ћ» «јЅ»“№??
-                eatHerbivore = Random.Range(50, 70);
+                temp = UnityEngine.Random.Range(10, 20);        // если че, можно еще UnityEngine.Random.Range
+                wet = UnityEngine.Random.Range(40, 55);
+                windStrength = UnityEngine.Random.Range(0, 2);
+                eatPredator = UnityEngine.Random.Range(50, 70);        // мб здесь тоже в зависимости от ветра и всего остального генерить диапазон? - »Ћ» «јЅ»“№??
+                eatHerbivore = UnityEngine.Random.Range(50, 70);
                 break;
             case DifficultyMode.mediumMode:
-                temp = Random.Range(-10, 30);
-                wet = Random.Range(30, 70);
-                windStrength = Random.Range(3, 9);
-                eatPredator = Random.Range(40, 60);
-                eatHerbivore = Random.Range(40, 60);
+                temp = UnityEngine.Random.Range(-10, 30);
+                wet = UnityEngine.Random.Range(30, 70);
+                windStrength = UnityEngine.Random.Range(3, 9);
+                eatPredator = UnityEngine.Random.Range(40, 60);
+                eatHerbivore = UnityEngine.Random.Range(40, 60);
                 break;
             case DifficultyMode.hardMode:
-                temp = Random.Range(-30, 50);
-                wet = Random.Range(20, 100);
-                windStrength = Random.Range(10, 18);
-                eatPredator = Random.Range(20, 40);
-                eatHerbivore = Random.Range(20, 40);
+                temp = UnityEngine.Random.Range(-30, 50);
+                wet = UnityEngine.Random.Range(20, 100);
+                windStrength = UnityEngine.Random.Range(10, 18);
+                eatPredator = UnityEngine.Random.Range(20, 40);
+                eatHerbivore = UnityEngine.Random.Range(20, 40);
                 break;
         }
+        OnEnvironmentChanged?.Invoke();
+    }
+
+    public void NextGeneration()
+    {
+        currentGenerationInEnv++;
+        OnEnvironmentChanged?.Invoke();
+
+        if (currentGenerationInEnv >= generationMax)
+            StartNewEra();
+    }
+
+    void StartNewEra()
+    {
+        era++;
+        currentGenerationInEnv = 0;
+        Initialize();
+        OnEnvironmentChanged?.Invoke();
     }
 }
