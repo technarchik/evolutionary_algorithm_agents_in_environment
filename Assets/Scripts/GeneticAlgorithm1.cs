@@ -6,6 +6,9 @@ using UnityEngine;
 
 public class GeneticAlgorithm1 : MonoBehaviour
 {
+    public Transform predatorsPanel;
+    public Transform herbivoresPanel;
+
     [Header("References")]
     public Environment env;
     public GameObject predatorPrefab;
@@ -113,35 +116,87 @@ public class GeneticAlgorithm1 : MonoBehaviour
         env.currentGenerationInEnv = 0;
     }
 
+    //void InitializePopulations()
+    //{
+    //    foreach (var p in predators)
+    //        Destroy(p.gameObject);
+    //    foreach (var h in herbivores)
+    //        Destroy(h.gameObject);
+    //    predators.Clear();
+    //    herbivores.Clear();
+
+    //    for (int i = 0; i < predatorCount;  i++)
+    //    {
+    //        var createPredatorObject = Instantiate(predatorPrefab);
+    //        var predatorObject = createPredatorObject.GetComponent<Predator>();
+    //        if (predatorObject == null) predatorObject.AddComponent<Predator>();
+    //        CreateGenes(predatorObject);
+    //        predators.Add(predatorObject);
+    //    }
+    //    Debug.Log("Predators are ready");
+
+    //    for (int i = 0; i < herbivoreCount; i++)
+    //    {
+    //        var createHerbivoreObject = Instantiate(herbivorePrefab);
+    //        var herbivoreObject = createHerbivoreObject.GetComponent<Herbivore>();
+    //        if (herbivoreObject == null) herbivoreObject.AddComponent<Herbivore>();
+    //        CreateGenes(herbivoreObject);
+    //        herbivores.Add(herbivoreObject);
+    //    }
+    //    Debug.Log("Herbivores are ready");
+    //}
+
     void InitializePopulations()
     {
-        foreach (var p in predators)
-            Destroy(p.gameObject);
-        foreach (var h in herbivores)
-            Destroy(h.gameObject);
+        ClearPopulation(predators);
+        ClearPopulation(herbivores);
+
         predators.Clear();
         herbivores.Clear();
 
-        for (int i = 0; i < predatorCount;  i++)
-        {
-            var createPredatorObject = Instantiate(predatorPrefab);
-            var predatorObject = createPredatorObject.GetComponent<Predator>();
-            if (predatorObject == null) predatorObject.AddComponent<Predator>();
-            CreateGenes(predatorObject);
-            predators.Add(predatorObject);
-        }
+        CreatePopulation(
+            predatorCount,
+            predatorPrefab,
+            predatorsPanel,
+            predators
+        );
+
         Debug.Log("Predators are ready");
 
-        for (int i = 0; i < herbivoreCount; i++)
-        {
-            var createHerbivoreObject = Instantiate(herbivorePrefab);
-            var herbivoreObject = createHerbivoreObject.GetComponent<Herbivore>();
-            if (herbivoreObject == null) herbivoreObject.AddComponent<Herbivore>();
-            CreateGenes(herbivoreObject);
-            herbivores.Add(herbivoreObject);
-        }
+        CreatePopulation(
+            herbivoreCount,
+            herbivorePrefab,
+            herbivoresPanel,
+            herbivores
+        );
+
         Debug.Log("Herbivores are ready");
     }
+
+    void CreatePopulation<T>(int count, GameObject prefab, Transform panel, List<T> population) where T : Animal
+    {
+        for (int i = 0; i < count; i++)
+        {
+            GameObject instance = Instantiate(prefab, panel);
+
+            T animal = instance.GetComponent<T>();
+            if (animal == null)
+                animal = instance.AddComponent<T>();
+
+            CreateGenes(animal);
+            population.Add(animal);
+        }
+    }
+
+    void ClearPopulation<T>(List<T> population) where T : MonoBehaviour
+    {
+        foreach (var entity in population)
+        {
+            if (entity != null)
+                Destroy(entity.gameObject);
+        }
+    }
+
 
     void CreateGenes(Animal animal)
     {
