@@ -289,7 +289,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   currentGenerationInEnv: 0
-  generationMax: 50
+  generationMax: 20
   era: 0
   difficultyMode: 0
   temp: 0
@@ -348,7 +348,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 170, y: -40}
+  m_AnchoredPosition: {x: 170, y: -20}
   m_SizeDelta: {x: 1000, y: 1100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &391606195
@@ -371,7 +371,7 @@ MonoBehaviour:
   m_ChildAlignment: 4
   m_StartCorner: 0
   m_StartAxis: 0
-  m_CellSize: {x: 70, y: 50}
+  m_CellSize: {x: 70, y: 74}
   m_Spacing: {x: 0, y: 0}
   m_Constraint: 1
   m_ConstraintCount: 5
@@ -437,8 +437,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 432889654}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -110, y: 90, z: -1122.3689}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: -140, y: 100, z: -1122.3689}
+  m_LocalScale: {x: 0.7, y: 0.7, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 799522378}
@@ -448,7 +448,7 @@ Transform:
   - {fileID: 454771688}
   - {fileID: 1404122190}
   m_Father: {fileID: 1048645422}
-  m_RootOrder: 4
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &442601233
 GameObject:
@@ -875,11 +875,14 @@ MonoBehaviour:
   herbivoreCount: 25
   mutationRate: 0.05
   crossoverRate: 0.9
-  firstDeltaHPLose: 10
-  secondDeltaHPLose: 20
+  firstDeltaHPLose: 20
+  secondDeltaHPLose: 30
   elitismCount: 2
   tournamentSize: 3
   staminaUpdateInterval: 5
+  hpWeight: 2
+  abilitiesWeight: 1
+  eatWeight: 0.5
   noiseOfMutation: 0.1
   timeForOneGeneration: 1
   simulationSpeed: 1
@@ -1438,14 +1441,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 823192741}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -110, y: -120, z: -772.40106}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 50, y: 100, z: -772.40106}
+  m_LocalScale: {x: 0.7, y: 0.7, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 32355542}
   - {fileID: 1076417357}
   m_Father: {fileID: 1048645422}
-  m_RootOrder: 3
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &963194225
 GameObject:
@@ -1627,8 +1630,8 @@ RectTransform:
   - {fileID: 788790139}
   - {fileID: 1697722108}
   - {fileID: 391606194}
-  - {fileID: 823192742}
   - {fileID: 432889655}
+  - {fileID: 823192742}
   - {fileID: 1975670434}
   m_Father: {fileID: 0}
   m_RootOrder: 2
@@ -2341,7 +2344,7 @@ MonoBehaviour:
   m_MinValue: 0
   m_MaxValue: 1
   m_WholeNumbers: 0
-  m_Value: 0
+  m_Value: 1
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -2381,7 +2384,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -220, y: -40}
+  m_AnchoredPosition: {x: -220, y: -20}
   m_SizeDelta: {x: 1000, y: 1100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1697722109
@@ -2442,7 +2445,7 @@ MonoBehaviour:
   m_ChildAlignment: 4
   m_StartCorner: 0
   m_StartAxis: 0
-  m_CellSize: {x: 70, y: 50}
+  m_CellSize: {x: 70, y: 74}
   m_Spacing: {x: 0, y: 0}
   m_Constraint: 1
   m_ConstraintCount: 5
@@ -2470,8 +2473,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1975670433}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 180, y: 90, z: 130.43678}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 190, y: 100, z: 130.43678}
+  m_LocalScale: {x: 0.7, y: 0.7, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1507667435}
