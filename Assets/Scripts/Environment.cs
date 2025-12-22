@@ -48,6 +48,7 @@ public class Environment : MonoBehaviour
         if (era != 0)
         {
             // set difficulty with probability
+            Debug.Log("Env changed");
             float random = UnityEngine.Random.value;   // from 0 to 1
 
             if (random < 0.7f)
@@ -91,7 +92,7 @@ public class Environment : MonoBehaviour
                 wet = UnityEngine.Random.Range(20, 100);
                 windStrength = UnityEngine.Random.Range(10, 18);
                 eatPredator = UnityEngine.Random.Range(20, 40);
-                eatHerbivore = UnityEngine.Random.Range(20, 40);
+                eatHerbivore = UnityEngine.Random.Range(30, 50);
                 break;
         }
         OnEnvironmentChanged?.Invoke();

@@ -6,7 +6,7 @@ public class Predator : Animal
 {
     public float huntAbility
     {
-        get { return speed + stamina; }
+        get { return speed + stamina; } // maybe multipluy? #todo
     }
 
     public void Kill(Herbivore prey) // либо список из Herbivore передаем

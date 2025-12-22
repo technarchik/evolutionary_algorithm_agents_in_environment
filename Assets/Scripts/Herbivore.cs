@@ -6,7 +6,7 @@ public class Herbivore : Animal
 {
     public float escapeAbility
     {
-        get { return speed + stamina; }
+        get { return speed + stamina; } // maybe multipluy? #todo
     }
 
     // у травоядного пока нет способности к запасу (а-ля настолка Эволюция - у животного нет фишки жира)
