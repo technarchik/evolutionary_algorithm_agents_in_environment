@@ -57,9 +57,12 @@ public class GeneticAlgorithm1 : MonoBehaviour
     [SerializeField] private float simulationSpeed = 1.0f;      // multiply for speed
 
     private float generationTimer = 0f;
-    private bool simulationIsRunning = false;
-
+    private bool simulationIsRunning = true;
     private long k = 0; //update counter
+
+    // for presenting the best animal
+    private int lastEra = 0;
+    private bool eraPauseActive = false;
 
     public static event Action PopulationCreated;
 
@@ -104,8 +107,8 @@ public class GeneticAlgorithm1 : MonoBehaviour
         {
             k = 0;
             //Debug.Log("FixedUpdate");
-            //if (!simulationIsRunning)
-            //    return;
+            if (!simulationIsRunning) //////////////////////////////////////////////////////////////////////////             for highlighting the best
+                return;
             generationTimer += Time.deltaTime * simulationSpeed;
 
             if (generationTimer >= timeForOneGeneration)
@@ -241,6 +244,26 @@ public class GeneticAlgorithm1 : MonoBehaviour
             ChangeStamina(herbivores);
         }
 
+        // for presenting the best animal
+        if (env.currentGenerationInEnv + 1 >= env.generationMax && !eraPauseActive)
+        {
+            // looking for the bests
+            Predator bestPredator = FindBestAnimal(predators);
+            Herbivore bestHerbivore = FindBestAnimal(herbivores);
+
+            // highlighting
+            HighlightBestAnimal(predators, bestPredator, Color.yellow);
+            HighlightBestAnimal(herbivores, bestHerbivore, Color.yellow);
+
+            // log
+            Debug.Log($"--------- END OF ERA {env.era} ---------");
+            LogBestAnimal(bestPredator);
+            LogBestAnimal(bestHerbivore);
+
+            StartCoroutine(WaitAndStartNewEra());
+            return;
+        }
+
         foreach (var predator in  predators)
             predator.UpdateUI();
 
@@ -251,8 +274,76 @@ public class GeneticAlgorithm1 : MonoBehaviour
         ApplyNextGeneration(predators, genesNextGenPredators);
         ApplyNextGeneration(herbivores, genesNextGenHerbivores);
 
+        //// for presenting the best animal
+        //if (env.currentGenerationInEnv + 1 >= env.generationMax && !eraPauseActive)
+        //{
+        //    StartCoroutine(ShowBestAnimal());
+        //    return;
+        //}
+
         env.NextGeneration();
-        Debug.Log(env.currentGenerationInEnv);
+        Debug.Log("Generation: " + env.currentGenerationInEnv);
+
+        //// for presenting the best animal
+        //if (env.era != lastEra && !eraPauseActive)
+        //{
+        //    lastEra = env.era;
+        //    StartCoroutine(ShowBestAnimal());
+        //}
+    }
+
+    IEnumerator WaitAndStartNewEra()
+    {
+        eraPauseActive = true;
+
+        // stop the simulation
+        simulationIsRunning = false;
+
+        // pause
+        yield return new WaitForSeconds(5f);
+
+        // delete highlighting
+        ResetHighlight(predators);
+        ResetHighlight(herbivores);
+
+        // return to simulation
+        env.NextGeneration();
+        simulationIsRunning = true;
+        eraPauseActive = false;
+    }
+
+
+    IEnumerator ShowBestAnimal()
+    {
+        eraPauseActive = true;
+
+        // stop the simulation
+        simulationIsRunning = false;
+
+        // looking for the bests
+        Predator bestPredator = FindBestAnimal(predators);
+        Herbivore bestHerbivore = FindBestAnimal(herbivores);
+
+        // highlighting
+        HighlightBestAnimal(predators, Color.yellow);
+        HighlightBestAnimal(herbivores, Color.yellow);
+
+        // log
+        Debug.Log($"--------- END OF ERA {env.era} ---------");
+        LogBestAnimal(bestPredator);
+        LogBestAnimal(bestHerbivore);
+
+        // pause
+        yield return new WaitForSeconds(5f);
+
+        // delete highlighting
+        ResetHighlight(predators);
+        ResetHighlight(herbivores);
+
+        // return to simulation
+        env.NextGeneration();
+        simulationIsRunning = true;
+        eraPauseActive = false;
     }
 
     #endregion
@@ -424,12 +515,6 @@ public class GeneticAlgorithm1 : MonoBehaviour
         }
     }
 
-    //void EvaluateFitnessInEnvironment(Animal animal) // ---------------?
-    //{
-    //    float tempFit;
-    //    float wetFit;
-    //}
-
     void CalculateHPPredator() // BTW i dont count hp lose if food is not enough
     {
         foreach(var predator in predators)
@@ -578,6 +663,73 @@ public class GeneticAlgorithm1 : MonoBehaviour
 
     #endregion
 
+    #region Choosing the best
+
+    // searching the best agent
+    T FindBestAnimal<T>(List<T> animals) where T : Animal
+    {
+        T best = animals[0];
+
+        foreach (var animal in animals)
+        {
+            if (animal.score > best.score)
+                best = animal;
+        }
+        return best;
+    }
+
+    // highlighting the best agent - doesnt working :_(    mb cause of using renderer?
+    void HighlightBestAnimal<T>(List<T> animals, T bestAnimal, Color highlightColor) where T : Animal
+    {
+        foreach (var animal in animals)
+        {
+            if (animal == bestAnimal)
+            {
+                var renderer = animal.GetComponent<Renderer>();
+                if (renderer != null)
+                    renderer.material.color = highlightColor;
+            }
+            else
+            {
+                var renderer = animal.GetComponent<Renderer>();
+                if (renderer != null)
+                    renderer.material.color = Color.white;
+            }
+        }
+    }
+
+    // highlighting the best agent - doesnt working :_(
+    void HighlightBestAnimal<T>(List<T> animals, Color highlightColor) where T : Animal
+    {
+        foreach (var animal in animals)
+        {
+            var image = animal.GetComponent<UnityEngine.UI.Image>();
+            if (image == null)
+                continue;
+
+            image.color = Color.white;
+        }
+
+        T best = FindBestAnimal(animals);
+
+        var bestImage = best.GetComponent<UnityEngine.UI.Image>();
+        if (bestImage != null)
+            bestImage.color = highlightColor;
+
+        LogBestAnimal(best);
+    }
+
+    void ResetHighlight<T>(List<T> animals) where T : Animal
+    {
+        foreach (var animal in animals)
+        {
+            var image = animal.GetComponent<UnityEngine.UI.Image>();
+            if (image != null)
+                image.color = Color.white;
+        }
+    }
+
+    #endregion
 
     #region Helpers
     // struct for applying intervals of characteristics
@@ -650,6 +802,25 @@ public class GeneticAlgorithm1 : MonoBehaviour
     {
         if (env.currentGenerationInEnv == 0)
             InitializePopulations();
+    }
+
+    #endregion
+
+    #region Logs
+
+    void LogBestAnimal(Animal animal)
+    {
+        Debug.Log(
+            $"BEST {animal.GetType().Name} | " +
+            $"Score: {animal.score:F2} | " +
+            $"HP: {animal.hp} | " +
+            $"Stamina: {animal.stamina:F2}, " +
+            $"Speed: {animal.speed:F2}, " +
+            $"TempRes: {animal.tempResist:F1}, " +
+            $"WetRes: {animal.wetResist:F1}, " +
+            $"EatNeed: {animal.eatNeed:F2} | " +
+            $"Generation: {env.currentGenerationInEnv}"
+        );
     }
 
     #endregion
