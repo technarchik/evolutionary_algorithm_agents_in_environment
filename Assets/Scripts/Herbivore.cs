@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class Herbivore : Animal
 {
+    public float fatSave;
     public float escapeAbility
     {
         get { return speed + stamina; } // maybe multipluy? #todo

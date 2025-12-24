@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEditorInternal.VR;
 using UnityEngine;
+using static Environment;
 using static Unity.VisualScripting.LudiqRootObjectEditor;
 
 public class GeneticAlgorithm1 : MonoBehaviour
@@ -466,18 +467,20 @@ public class GeneticAlgorithm1 : MonoBehaviour
         foreach (var predator in predators)
         {
             // must count, what important for predators?
-            //float envFit = EnvFitness(p);
 
-            //float huntFit = predator.huntAbility;
-            //predator.score = 0.5f + huntFit * 0.5f;
-            //float penalty = 0;
+            // normilizing
             float hpLose = Math.Abs(100 - predator.hp);
-
             float speedN = Mathf.Clamp01(predator.speed / speedRange.max);
             float staminaN = Mathf.Clamp01(predator.stamina / staminaRange.max);
             float hpLoseN = Mathf.Clamp01(hpLose / 100);
-            float eatN = Mathf.Clamp01(predator.eatNeed / eatNeedRange.max);
-
+            float eatN = 0;
+            if (env.difficultyMode == DifficultyMode.easyMode)
+                eatN = (predators.Count * predator.eatNeed) / 70; // just max of interval from Environment - mb better do it as params from Env?   #todo
+            if (env.difficultyMode == DifficultyMode.mediumMode)
+                eatN = (predators.Count * predator.eatNeed) / 60;
+            if (env.difficultyMode == DifficultyMode.hardMode)
+                eatN = (predators.Count * predator.eatNeed) / 40;
+            
             //float ability = predator.huntAbility * 0.5f;
 
             float abilitiesBonus = (speedN + staminaN) * 0.5f;
@@ -487,7 +490,6 @@ public class GeneticAlgorithm1 : MonoBehaviour
             predator.score = 100 * (hpPenalty * (abilitiesBonus * abilitiesWeight + eatPenalty * eatWeight));
 
             Debug.Log($"PREDATOR - SCORE: {predator.score} ||| speedN: {speedN} | staminaN: {staminaN} | hpLoseN: {hpLoseN} | eatN: {eatN} ||| abilitiesBonus: {abilitiesBonus} | hpPenalty: {hpPenalty} | eatPenalty: {eatPenalty}");
-            //Debug.Log(predator.score);
         }
     }
 
@@ -496,12 +498,20 @@ public class GeneticAlgorithm1 : MonoBehaviour
         foreach(var herbivore in herbivores)
         {
             // must count, what important for herbivores?
+
+            // normilizing
             float hpLose = Math.Abs(100 - herbivore.hp);
 
             float speedN = Mathf.Clamp01(herbivore.speed / speedRange.max);
             float staminaN = Mathf.Clamp01(herbivore.stamina / staminaRange.max);
             float hpLoseN = Mathf.Clamp01(hpLose / 100);
-            float eatN = Mathf.Clamp01(herbivore.eatNeed / eatNeedRange.max);
+            float eatN = 0;
+            if (env.difficultyMode == DifficultyMode.easyMode)
+                eatN = (herbivores.Count * herbivore.eatNeed) / 70; // just max of interval from Environment - mb better do it as params from Env?   #todo
+            if (env.difficultyMode == DifficultyMode.mediumMode)
+                eatN = (herbivores.Count * herbivore.eatNeed) / 60;
+            if (env.difficultyMode == DifficultyMode.hardMode)
+                eatN = (herbivores.Count * herbivore.eatNeed) / 50;
 
             //float ability = herbivore.escapeAbility * 0.5f;
 
