@@ -875,16 +875,17 @@ MonoBehaviour:
   herbivoreCount: 25
   mutationRate: 0.05
   crossoverRate: 0.9
+  noiseOfMutation: 0.2
   firstDeltaHPLose: 20
   secondDeltaHPLose: 30
-  elitismCount: 2
+  elitismCount: 5
   tournamentSize: 3
   staminaUpdateInterval: 5
   crossoverProbability: 0.5
+  blxAlpha: 0.5
   hpWeight: 0.05
   abilitiesWeight: 1
   eatWeight: 0
-  noiseOfMutation: 0.3
   timeForOneGeneration: 1
   simulationSpeed: 1
 --- !u!4 &637588603
