@@ -37,6 +37,8 @@ public class GeneticAlgorithm1 : MonoBehaviour
     public float hpWeight = 4f;
     public float abilitiesWeight = 1f;
     public float eatWeight = 0.5f;
+    public float fatSaveWeight = 2f;
+    public float fatSaveConst = 0f;
 
     [Header("Initial ranges")]
     public TraitRange staminaRange = new TraitRange(5f, 20f);
@@ -44,6 +46,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
     public TraitRange tempResistRange = new TraitRange(-30f, 50f);
     public TraitRange wetResistRange = new TraitRange(20f, 100f);
     public TraitRange eatNeedRange = new TraitRange(1.2f, 2.8f);    // based on logic "everyone is feeded" - for every difficulty mode
+    public TraitRange fatSaveRange = new TraitRange(0f, 1f);
 
     // 2 populations that keep predators and herbivores separately
     private List<Predator> predators = new List<Predator>();
@@ -218,6 +221,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
         animal.tempResist = UnityEngine.Random.Range(tempResistRange.min, tempResistRange.max);
         animal.wetResist = UnityEngine.Random.Range(wetResistRange.min, wetResistRange.max);
         animal.eatNeed = UnityEngine.Random.Range(eatNeedRange.min, eatNeedRange.max);
+        animal.fatSave = UnityEngine.Random.Range(fatSaveRange.min, fatSaveRange.max);
     }
 
     #endregion
@@ -283,7 +287,6 @@ public class GeneticAlgorithm1 : MonoBehaviour
         //}
 
         env.NextGeneration();
-        Debug.Log("Generation: " + env.currentGenerationInEnv);
 
         //// for presenting the best animal
         //if (env.era != lastEra && !eraPauseActive)
@@ -401,7 +404,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
 
             // adding genes to the next generation
             children.Add(genesMother);
-            if (children.Count < animals.Count)    // idk should i do this way?
+            if (children.Count < animals.Count)
                 children.Add(genesFather);
         }
         return children;
@@ -409,7 +412,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
 
     List<float> TakeGenesFromAnimal(Animal animal)
     {
-        List<float> geneList = new List<float> { animal.stamina, animal.speed, animal.tempResist, animal.wetResist, animal.eatNeed};
+        List<float> geneList = new List<float> { animal.stamina, animal.speed, animal.tempResist, animal.wetResist, animal.eatNeed, animal.fatSave};
         return geneList;
     }
 
@@ -489,7 +492,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
 
             predator.score = 100 * (hpPenalty * (abilitiesBonus * abilitiesWeight + eatPenalty * eatWeight));
 
-            Debug.Log($"PREDATOR - SCORE: {predator.score} ||| speedN: {speedN} | staminaN: {staminaN} | hpLoseN: {hpLoseN} | eatN: {eatN} ||| abilitiesBonus: {abilitiesBonus} | hpPenalty: {hpPenalty} | eatPenalty: {eatPenalty}");
+            // Debug.Log($"PREDATOR - SCORE: {predator.score} ||| speedN: {speedN} | staminaN: {staminaN} | hpLoseN: {hpLoseN} | eatN: {eatN} ||| abilitiesBonus: {abilitiesBonus} | hpPenalty: {hpPenalty} | eatPenalty: {eatPenalty}");
         }
     }
 
@@ -501,7 +504,6 @@ public class GeneticAlgorithm1 : MonoBehaviour
 
             // normilizing
             float hpLose = Math.Abs(100 - herbivore.hp);
-
             float speedN = Mathf.Clamp01(herbivore.speed / speedRange.max);
             float staminaN = Mathf.Clamp01(herbivore.stamina / staminaRange.max);
             float hpLoseN = Mathf.Clamp01(hpLose / 100);
@@ -516,16 +518,19 @@ public class GeneticAlgorithm1 : MonoBehaviour
             //float ability = herbivore.escapeAbility * 0.5f;
 
             float abilitiesBonus = (speedN + staminaN) * 0.5f;
+            float fatSaveBonus = 0;
+            if (herbivore.fatSave >= 0.5f)
+                fatSaveBonus = 1;
             float hpPenalty = Mathf.Exp(-hpLose * hpWeight);
             float eatPenalty = 1f - eatN;
 
-            herbivore.score = 100 * (hpPenalty * (abilitiesBonus * abilitiesWeight + eatPenalty * eatWeight));
+            herbivore.score = 100 * (hpPenalty * (abilitiesBonus * abilitiesWeight + eatPenalty * eatWeight + fatSaveConst * fatSaveBonus));
 
-            Debug.Log($"HERBIVORE - SCORE: {herbivore.score} ||| speedN: {speedN} | staminaN: {staminaN} | hpLoseN: {hpLoseN} | eatN: {eatN} ||| abilitiesBonus: {abilitiesBonus} | hpPenalty: {hpPenalty} | eatPenalty: {eatPenalty}");
+            // Debug.Log($"HERBIVORE - SCORE: {herbivore.score} ||| speedN: {speedN} | staminaN: {staminaN} | hpLoseN: {hpLoseN} | eatN: {eatN} ||| abilitiesBonus: {abilitiesBonus} | hpPenalty: {hpPenalty} | eatPenalty: {eatPenalty}");
         }
     }
 
-    void CalculateHPPredator() // BTW i dont count hp lose if food is not enough
+    void CalculateHPPredator() // BTW i dont count hp lose if food is not enough - no, it will be count in stamina deprive
     {
         foreach(var predator in predators)
         {
@@ -534,7 +539,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
             predator.hp -= temp;
         }
     }
-    void CalculateHPHerbivore() // BTW i dont count hp lose if food is not enough
+    void CalculateHPHerbivore() // BTW i dont count hp lose if food is not enough - no, it will be count in stamina deprive
     {
         foreach (var herbivore in herbivores)
         {
@@ -630,28 +635,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
                 // VARIANT 2: with checking allowed interval
                 float noise = UnityEngine.Random.Range(-noiseOfMutation, noiseOfMutation);
                 gene[i] += noise;
-
                 ClampGene(i, gene[i]);
-
-                //switch (i)
-                //{
-                //    case 0: // stamina
-                //        gene[i] = Mathf.Clamp(gene[i], staminaRange.min, staminaRange.max);
-                //        break;
-                //    case 1: // speed
-                //        gene[i] = Mathf.Clamp(gene[i], speedRange.min, speedRange.max);
-                //        break;
-                //    case 2: // temp_resist
-                //        gene[i] = Mathf.Clamp(gene[i], tempResistRange.min, tempResistRange.max);
-                //        break;
-                //    case 3: // wet_resist
-                //        gene[i] = Mathf.Clamp(gene[i], wetResistRange.min, wetResistRange.max);
-                //        break;
-                //    case 4: //eat_need
-                //        gene[i] = Mathf.Clamp(gene[i], eatNeedRange.min, eatNeedRange.max);
-                //        break;
-
-                //}
 
                 // VARIANT 3: mutaion adapting to difficultyMode of the env
                 // float envFactor = env.difficultyMode == Environment.DifficultyMode.hardMode ? 0.2f : 0.05f;
@@ -764,6 +748,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
             animals[i].tempResist = genes[i][2];
             animals[i].wetResist = genes[i][3];
             animals[i].eatNeed = genes[i][4];
+            animals[i].fatSave = genes[i][5];
             animals[i].score = 0f;
         }
     }
@@ -783,12 +768,14 @@ public class GeneticAlgorithm1 : MonoBehaviour
                 return Mathf.Clamp(value, staminaRange.min, staminaRange.max);
             case 1: // speed
                 return Mathf.Clamp(value, speedRange.min, speedRange.max);
-            case 2: // temp_resist
+            case 2: // tempResist
                 return Mathf.Clamp(value, tempResistRange.min, tempResistRange.max);
-            case 3: // wet_resist
+            case 3: // wetResist
                 return Mathf.Clamp(value, wetResistRange.min, wetResistRange.max);
-            case 4: //eat_need
+            case 4: // eatNeed
                 return Mathf.Clamp(value, eatNeedRange.min, eatNeedRange.max);
+            case 5: // fatSave
+                return Mathf.Clamp(value, fatSaveRange.min, fatSaveRange.max);
             default: return value;
         }
     }
@@ -829,6 +816,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
             $"TempRes: {animal.tempResist:F1}, " +
             $"WetRes: {animal.wetResist:F1}, " +
             $"EatNeed: {animal.eatNeed:F2} | " +
+            $"FatSave: {animal.fatSave:F1} | " +
             $"Generation: {env.currentGenerationInEnv}"
         );
     }

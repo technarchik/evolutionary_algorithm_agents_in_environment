@@ -16,6 +16,7 @@ public class Animal : MonoBehaviour
     public float wetResist;
     public float eatNeed;   // смотреть в зависимости от количества генерируемой еды в текущем режиме
                             // оно меняется в ГА, но нужно будет задать предельные интервалы, в которых оно будет меняться, чтобы не перебустить животное
+    public float fatSave;   // только для травоядного показатель (будет считываться в фитнесе)
 
     // фитнес агента
     public float score;
@@ -31,7 +32,8 @@ public class Animal : MonoBehaviour
             speed,
             tempResist,
             wetResist,
-            eatNeed
+            eatNeed,
+            fatSave
         };
     }
 
@@ -43,7 +45,8 @@ public class Animal : MonoBehaviour
         $"Speed: {speed:F2}\n" +
         $"Temp: {tempResist:F2}\n" +
         $"Wet: {wetResist:F2}\n" +
-        /*$"Eat: {eatNeed:F2}"+*/
+        $"Fat: {fatSave:F1}\n" +
+        /*$"Eat: {eatNeed:F2}\n" +*/
         $"Score: {score:F2}";
     }
 }

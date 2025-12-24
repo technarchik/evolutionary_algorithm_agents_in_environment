@@ -4,10 +4,9 @@ using UnityEngine;
 
 public class Herbivore : Animal
 {
-    public float fatSave;
     public float escapeAbility
     {
-        get { return speed + stamina; } // maybe multipluy? #todo
+        get { return speed + stamina; } // maybe multipluy? or mb normilize stamina and: speed + (staminaN * speed)     #todo
     }
 
     // у травоядного пока нет способности к запасу (а-ля настолка Эволюция - у животного нет фишки жира)
