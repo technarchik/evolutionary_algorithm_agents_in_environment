@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEditorInternal.VR;
 using UnityEngine;
+using static Unity.VisualScripting.LudiqRootObjectEditor;
 
 public class GeneticAlgorithm1 : MonoBehaviour
 {
@@ -22,11 +23,14 @@ public class GeneticAlgorithm1 : MonoBehaviour
     [Header("GA parameters")]
     [Range(0f, 1f)] public float mutationRate = 0.05f;
     [Range(0f, 1f)] public float crossoverRate = 0.9f;
+    public float noiseOfMutation = 0.1f;
     public int firstDeltaHPLose = 10;
     public int secondDeltaHPLose = 20;
     public int elitismCount = 2;
     public int tournamentSize = 3;
     public int staminaUpdateInterval = 5;
+    public float crossoverProbability = 0.5f;
+    [Range(0f, 1f)] public float blxAlpha = 0.5f;
 
     [Header("Fitness weights")]
     public float hpWeight = 4f;
@@ -39,7 +43,6 @@ public class GeneticAlgorithm1 : MonoBehaviour
     public TraitRange tempResistRange = new TraitRange(-30f, 50f);
     public TraitRange wetResistRange = new TraitRange(20f, 100f);
     public TraitRange eatNeedRange = new TraitRange(1.2f, 2.8f);    // based on logic "everyone is feeded" - for every difficulty mode
-    public float noiseOfMutation = 0.1f;
 
     // 2 populations that keep predators and herbivores separately
     private List<Predator> predators = new List<Predator>();
@@ -223,7 +226,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
         CalculateHPPredator();
         CalculateHPHerbivore();
 
-        // need to count fitnesses for animals
+        // count fitnesses for animals
         EvaluateFitnessPredator();
         EvaluateFitnessHerbivore();
 
@@ -237,6 +240,12 @@ public class GeneticAlgorithm1 : MonoBehaviour
             ChangeStamina(predators);
             ChangeStamina(herbivores);
         }
+
+        foreach (var predator in  predators)
+            predator.UpdateUI();
+
+        foreach (var herbivore in herbivores)
+            herbivore.UpdateUI();
 
         // writing genes to new population
         ApplyNextGeneration(predators, genesNextGenPredators);
@@ -279,8 +288,12 @@ public class GeneticAlgorithm1 : MonoBehaviour
         while (children.Count < animals.Count)
         {
             // selecting parents
-            Animal mother = TournamentSelection(animals);
-            Animal father = TournamentSelection(animals);
+            // Tournament-Selection
+            // Animal mother = TournamentSelection(animals);
+            // Animal father = TournamentSelection(animals);
+            // Fitness-Proportionate-Selection
+            Animal mother = FitnessProportionateSelection(animals);
+            Animal father = FitnessProportionateSelection(animals);
 
             // remember their genes
             var genesMother = TakeGenesFromAnimal(mother);
@@ -308,17 +321,48 @@ public class GeneticAlgorithm1 : MonoBehaviour
         return geneList;
     }
 
+    #endregion
+
+    #region Selection methids
     Animal TournamentSelection<T>(List<T> list) where T : Animal
     {
         Animal bestAnimal = null;
         // may be can write this method another way
         for (int i = 0; i < tournamentSize; i++) 
         {
-            var c = list[UnityEngine.Random.Range(0, list.Count)];
-            if (bestAnimal == null || c.score > bestAnimal.score)
-                bestAnimal = c;
+            var ind = list[UnityEngine.Random.Range(0, list.Count)];
+            if (bestAnimal == null || ind.score > bestAnimal.score)
+                bestAnimal = ind;
         }
         return bestAnimal;
+    }
+
+    Animal FitnessProportionateSelection<T>(List<T> list) where T : Animal
+    {
+        // MaxValue cause we need the biggest fitness in the world!
+        float minFitness = float.MaxValue;
+
+        foreach (var ind in list)
+            minFitness = Mathf.Min(minFitness, ind.score);
+
+        float offset = minFitness < 0 ? -minFitness + 0.001f : 0f;
+
+        float totalFitness = 0f;
+        foreach (var ind in list)
+            totalFitness += ind.score + offset;
+
+        float randomPoint = UnityEngine.Random.Range(0f, totalFitness);
+
+        float currentSum = 0f;
+        foreach (var ind in list)
+        {
+            currentSum += ind.score + offset;
+            if (currentSum >= randomPoint)
+                return ind;
+        }
+
+        // fallback
+        return list[list.Count - 1];
     }
 
     #endregion
@@ -349,7 +393,10 @@ public class GeneticAlgorithm1 : MonoBehaviour
             float hpPenalty = Mathf.Exp(-hpLose * hpWeight);
             float eatPenalty = 1f - eatN;
 
-            predator.score = hpPenalty * (abilitiesBonus * abilitiesWeight + eatPenalty * eatWeight);
+            predator.score = 100 * (hpPenalty * (abilitiesBonus * abilitiesWeight + eatPenalty * eatWeight));
+
+            Debug.Log($"PREDATOR - SCORE: {predator.score} ||| speedN: {speedN} | staminaN: {staminaN} | hpLoseN: {hpLoseN} | eatN: {eatN} ||| abilitiesBonus: {abilitiesBonus} | hpPenalty: {hpPenalty} | eatPenalty: {eatPenalty}");
+            //Debug.Log(predator.score);
         }
     }
 
@@ -371,15 +418,17 @@ public class GeneticAlgorithm1 : MonoBehaviour
             float hpPenalty = Mathf.Exp(-hpLose * hpWeight);
             float eatPenalty = 1f - eatN;
 
-            herbivore.score = hpPenalty * (abilitiesBonus * abilitiesWeight + eatPenalty * eatWeight);
+            herbivore.score = 100 * (hpPenalty * (abilitiesBonus * abilitiesWeight + eatPenalty * eatWeight));
+
+            Debug.Log($"HERBIVORE - SCORE: {herbivore.score} ||| speedN: {speedN} | staminaN: {staminaN} | hpLoseN: {hpLoseN} | eatN: {eatN} ||| abilitiesBonus: {abilitiesBonus} | hpPenalty: {hpPenalty} | eatPenalty: {eatPenalty}");
         }
     }
 
-    void EvaluateFitnessInEnvironment(Animal animal) // ---------------?
-    {
-        float tempFit;
-        float wetFit;
-    }
+    //void EvaluateFitnessInEnvironment(Animal animal) // ---------------?
+    //{
+    //    float tempFit;
+    //    float wetFit;
+    //}
 
     void CalculateHPPredator() // BTW i dont count hp lose if food is not enough
     {
@@ -427,13 +476,45 @@ public class GeneticAlgorithm1 : MonoBehaviour
 
     void CrossoverAlgorithm(List<float> mother, List<float> father)
     {
-        // VARIANT 1: single point crossover
-        int point = UnityEngine.Random.Range(1, mother.Count);
-        for (int i = point; i < mother.Count; i++)
+        //// VARIANT 1: single point crossover
+        //int point = UnityEngine.Random.Range(1, mother.Count);
+        //for (int i = point; i < mother.Count; i++)
+        //{
+        //    float temp = mother[i];
+        //    mother[i] = father[i];
+        //    father[i] = temp;
+        //}
+
+        //// VARIANT 2: uniform crossover
+        //for (int i = 0; i < mother.Count; i++)
+        //{
+        //    if (UnityEngine.Random.value < crossoverProbability)
+        //    {
+        //        float temp = mother[i];
+        //        mother[i] = father[i];
+        //        father[i] = temp;
+        //    }
+        //}
+
+        // VARIANT 3: BLX-alpha crossover
+        for (int i = 0; i < mother.Count; i++)
         {
-            float temp = mother[i];
-            mother[i] = father[i];
-            father[i] = temp;
+            float gene1 = mother[i];
+            float gene2 = father[i];
+
+            float min = Mathf.Min(gene1, gene2);
+            float max = Mathf.Max(gene1, gene2);
+            float range = max - min;
+
+            float left = min - blxAlpha * range;
+            float right = max + blxAlpha * range;
+
+            float child1 = UnityEngine.Random.Range(left, right);
+            float child2 = UnityEngine.Random.Range(left, right);
+
+            // clamping
+            mother[i] = ClampGene(i, child1);
+            father[i] = ClampGene(i, child2);
         }
     }
 
@@ -455,25 +536,27 @@ public class GeneticAlgorithm1 : MonoBehaviour
                 float noise = UnityEngine.Random.Range(-noiseOfMutation, noiseOfMutation);
                 gene[i] += noise;
 
-                switch(i)
-                {
-                    case 0: // stamina
-                        gene[i] = Mathf.Clamp(gene[i], staminaRange.min, staminaRange.max);
-                        break;
-                    case 1: // speed
-                        gene[i] = Mathf.Clamp(gene[i], speedRange.min, speedRange.max);
-                        break;
-                    case 2: // temp_resist
-                        gene[i] = Mathf.Clamp(gene[i], tempResistRange.min, tempResistRange.max);
-                        break;
-                    case 3: // wet_resist
-                        gene[i] = Mathf.Clamp(gene[i], wetResistRange.min, wetResistRange.max);
-                        break;
-                    case 4: //eat_need
-                        gene[i] = Mathf.Clamp(gene[i], eatNeedRange.min, eatNeedRange.max);
-                        break;
+                ClampGene(i, gene[i]);
 
-                }
+                //switch (i)
+                //{
+                //    case 0: // stamina
+                //        gene[i] = Mathf.Clamp(gene[i], staminaRange.min, staminaRange.max);
+                //        break;
+                //    case 1: // speed
+                //        gene[i] = Mathf.Clamp(gene[i], speedRange.min, speedRange.max);
+                //        break;
+                //    case 2: // temp_resist
+                //        gene[i] = Mathf.Clamp(gene[i], tempResistRange.min, tempResistRange.max);
+                //        break;
+                //    case 3: // wet_resist
+                //        gene[i] = Mathf.Clamp(gene[i], wetResistRange.min, wetResistRange.max);
+                //        break;
+                //    case 4: //eat_need
+                //        gene[i] = Mathf.Clamp(gene[i], eatNeedRange.min, eatNeedRange.max);
+                //        break;
+
+                //}
 
                 // VARIANT 3: mutaion adapting to difficultyMode of the env
                 // float envFactor = env.difficultyMode == Environment.DifficultyMode.hardMode ? 0.2f : 0.05f;
@@ -520,8 +603,6 @@ public class GeneticAlgorithm1 : MonoBehaviour
             animals[i].wetResist = genes[i][3];
             animals[i].eatNeed = genes[i][4];
             animals[i].score = 0f;
-
-            animals[i].UpdateUI();
         }
     }
 
@@ -529,6 +610,25 @@ public class GeneticAlgorithm1 : MonoBehaviour
     public void SetSimulationSpeed(float speed)
     {
         simulationSpeed = speed;
+    }
+
+    // clamping genes to the intervals of the characteristics
+    float ClampGene(int index, float value)
+    {
+        switch (index)
+        {
+            case 0: // stamina
+                return Mathf.Clamp(value, staminaRange.min, staminaRange.max);
+            case 1: // speed
+                return Mathf.Clamp(value, speedRange.min, speedRange.max);
+            case 2: // temp_resist
+                return Mathf.Clamp(value, tempResistRange.min, tempResistRange.max);
+            case 3: // wet_resist
+                return Mathf.Clamp(value, wetResistRange.min, wetResistRange.max);
+            case 4: //eat_need
+                return Mathf.Clamp(value, eatNeedRange.min, eatNeedRange.max);
+            default: return value;
+        }
     }
     #endregion
 
@@ -548,8 +648,8 @@ public class GeneticAlgorithm1 : MonoBehaviour
     // MAY BE DOESNT NEED IT - DESTROYING OLD LIST OF ANIMALS
     void OnEnvironmentChanged()
     {
-    //    if (env.currentGenerationInEnv == 0)
-    //        InitializePopulations();
+        if (env.currentGenerationInEnv == 0)
+            InitializePopulations();
     }
 
     #endregion

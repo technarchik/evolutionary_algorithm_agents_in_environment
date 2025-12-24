@@ -51,9 +51,9 @@ public class Environment : MonoBehaviour
             Debug.Log("Env changed");
             float random = UnityEngine.Random.value;   // from 0 to 1
 
-            if (random < 0.7f)
+            if (random < 0.5f)
                 difficultyMode = DifficultyMode.easyMode;         // 70%
-            else if (random < 0.9f)
+            else if (random < 0.7f)
                 difficultyMode = DifficultyMode.mediumMode;       // 20%
             else
                 difficultyMode = DifficultyMode.hardMode;         // 10%
@@ -65,7 +65,7 @@ public class Environment : MonoBehaviour
         {
             difficultyMode = DifficultyMode.easyMode;
             GenerateConditions();
-            temp = TempCalc(temp, wet, windStrength);
+            //temp = TempCalc(temp, wet, windStrength);
         }
     }
 

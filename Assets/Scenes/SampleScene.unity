@@ -289,7 +289,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   currentGenerationInEnv: 0
-  generationMax: 20
+  generationMax: 40
   era: 0
   difficultyMode: 0
   temp: 0
@@ -880,10 +880,11 @@ MonoBehaviour:
   elitismCount: 2
   tournamentSize: 3
   staminaUpdateInterval: 5
-  hpWeight: 2
+  crossoverProbability: 0.5
+  hpWeight: 0.05
   abilitiesWeight: 1
-  eatWeight: 0.5
-  noiseOfMutation: 0.1
+  eatWeight: 0
+  noiseOfMutation: 0.3
   timeForOneGeneration: 1
   simulationSpeed: 1
 --- !u!4 &637588603
@@ -2342,7 +2343,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 664794258}
   m_Direction: 0
   m_MinValue: 0
-  m_MaxValue: 1
+  m_MaxValue: 4
   m_WholeNumbers: 0
   m_Value: 1
   m_OnValueChanged:
