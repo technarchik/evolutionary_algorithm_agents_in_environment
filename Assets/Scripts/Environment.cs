@@ -1,7 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System;
+using UnityEngine.SceneManagement;
 
 public class Environment : MonoBehaviour
 {
@@ -36,6 +37,14 @@ public class Environment : MonoBehaviour
     public float eatPredator;
     public float eatHerbivore;
 
+    public bool IsInitialized { get; private set; }
+
+    private void Awake()
+    {
+        Scene currentScene = SceneManager.GetActiveScene();
+        if (currentScene.name == "SceneGameSimulation")
+            Initialize();
+    }
 
     public float TempCalc(float temp, float wet, float windStrength)
     {
@@ -48,7 +57,7 @@ public class Environment : MonoBehaviour
         if (era != 0)
         {
             // set difficulty with probability
-            Debug.Log("Env changed");
+            //Debug.Log("Env changed");
             float random = UnityEngine.Random.value;   // from 0 to 1
 
             if (random < 0.5f)
@@ -67,6 +76,8 @@ public class Environment : MonoBehaviour
             GenerateConditions();
             temp = TempCalc(temp, wet, windStrength);
         }
+        IsInitialized = true;
+        Debug.Log("Env changed");
     }
 
     public void GenerateConditions()
