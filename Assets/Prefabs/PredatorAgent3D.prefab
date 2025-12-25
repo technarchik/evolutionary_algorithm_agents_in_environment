@@ -346,6 +346,7 @@ GameObject:
   - component: {fileID: 7539436502964131987}
   - component: {fileID: 7241588900193541951}
   - component: {fileID: 1466983787079510512}
+  - component: {fileID: 3979991545837218892}
   m_Layer: 0
   m_Name: PredatorAgent3D
   m_TagString: Untagged
@@ -420,21 +421,21 @@ MonoBehaviour:
   abilitiesWeight: 1
   eatWeight: 0.5
   fatSaveConst: 0
-  staminaRange:
-    min: 5
-    max: 20
-  speedRange:
-    min: 0.5
-    max: 5
-  tempResistRange:
-    min: -30
-    max: 50
-  wetResistRange:
-    min: 20
-    max: 100
-  eatNeedRange:
-    min: 1.2
-    max: 2.8
-  fatSaveRange:
-    min: 0
-    max: 1
+  startDelay: 0.5
+--- !u!114 &3979991545837218892
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6592057370630803302}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a4b3f9ae8a2339f47a89023a54f13566, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  areaCenter: {x: 0, y: 0, z: 0}
+  areaSize: {x: 20, y: 0, z: 20}
+  moveSpeed: 2
+  minWaitTime: 1
+  maxWaitTime: 2

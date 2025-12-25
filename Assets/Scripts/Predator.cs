@@ -9,7 +9,7 @@ public class Predator : Animal
         get { return speed + stamina; } // maybe multipluy? #todo
     }
 
-    public void Kill(Herbivore prey) // либо список из Herbivore передаем
+    public void Kill(Herbivore prey, Vector3 vectorTarget) // либо список из Herbivore передаем
     {
         /* 
         Какой-то из 4 вариантов:

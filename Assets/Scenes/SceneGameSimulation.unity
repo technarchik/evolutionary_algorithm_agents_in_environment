@@ -512,7 +512,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3445674174165888241, guid: 05c643567b5901e4b93c0b28c757e548, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 473.62
+      value: 470
       objectReference: {fileID: 0}
     - target: {fileID: 3445674174165888241, guid: 05c643567b5901e4b93c0b28c757e548, type: 3}
       propertyPath: m_LocalPosition.y
@@ -520,7 +520,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3445674174165888241, guid: 05c643567b5901e4b93c0b28c757e548, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 423.12
+      value: 423
       objectReference: {fileID: 0}
     - target: {fileID: 3445674174165888241, guid: 05c643567b5901e4b93c0b28c757e548, type: 3}
       propertyPath: m_LocalRotation.w
@@ -566,6 +566,14 @@ PrefabInstance:
       propertyPath: env
       value: 
       objectReference: {fileID: 1256430064}
+    - target: {fileID: 9191366928025709154, guid: 05c643567b5901e4b93c0b28c757e548, type: 3}
+      propertyPath: areaCenter.x
+      value: 470
+      objectReference: {fileID: 0}
+    - target: {fileID: 9191366928025709154, guid: 05c643567b5901e4b93c0b28c757e548, type: 3}
+      propertyPath: areaCenter.z
+      value: 423
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 5579626599934334103, guid: 05c643567b5901e4b93c0b28c757e548, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: 05c643567b5901e4b93c0b28c757e548, type: 3}
@@ -588,6 +596,14 @@ PrefabInstance:
       propertyPath: m_Camera
       value: 
       objectReference: {fileID: 1773001574}
+    - target: {fileID: 3979991545837218892, guid: 75fcb0331486a06438abdcc8db786382, type: 3}
+      propertyPath: areaCenter.x
+      value: 470
+      objectReference: {fileID: 0}
+    - target: {fileID: 3979991545837218892, guid: 75fcb0331486a06438abdcc8db786382, type: 3}
+      propertyPath: areaCenter.z
+      value: 423
+      objectReference: {fileID: 0}
     - target: {fileID: 6592057370630803302, guid: 75fcb0331486a06438abdcc8db786382, type: 3}
       propertyPath: m_Name
       value: PredatorAgent3D

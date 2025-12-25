@@ -146,6 +146,7 @@ GameObject:
   - component: {fileID: 3445674174165888241}
   - component: {fileID: 7066775806126293938}
   - component: {fileID: 5978237743451422249}
+  - component: {fileID: 9191366928025709154}
   m_Layer: 0
   m_Name: HerbivoreAgent3D
   m_TagString: Untagged
@@ -220,24 +221,24 @@ MonoBehaviour:
   abilitiesWeight: 1
   eatWeight: 0.5
   fatSaveConst: 0
-  staminaRange:
-    min: 5
-    max: 20
-  speedRange:
-    min: 0.5
-    max: 5
-  tempResistRange:
-    min: -30
-    max: 50
-  wetResistRange:
-    min: 20
-    max: 100
-  eatNeedRange:
-    min: 1.2
-    max: 2.8
-  fatSaveRange:
-    min: 0
-    max: 1
+  startDelay: 0.5
+--- !u!114 &9191366928025709154
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3445674174165888242}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a4b3f9ae8a2339f47a89023a54f13566, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  areaCenter: {x: 0, y: 0, z: 0}
+  areaSize: {x: 20, y: 0, z: 20}
+  moveSpeed: 2
+  minWaitTime: 1
+  maxWaitTime: 2
 --- !u!1 &3445674174714820508
 GameObject:
   m_ObjectHideFlags: 0
