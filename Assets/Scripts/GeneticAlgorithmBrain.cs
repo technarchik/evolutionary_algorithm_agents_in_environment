@@ -53,7 +53,7 @@ public class GeneticAlgorithmBrain : MonoBehaviour  // #todo: its better to make
     public float startDelay = 0.5f;
 
     [Header("Era settings")]
-    public float eraDelay = 2f;
+    public float eraDelay = 10f;
 
 
     private void Start()
@@ -468,6 +468,12 @@ public class GeneticAlgorithmBrain : MonoBehaviour  // #todo: its better to make
             $"Temp: {target.tempResist:F1}\n" +
             $"Wet: {target.wetResist:F1}\n" +
             $"Fat: {target.fatSave:F1}";
+
+        // call Predator/Herbivore
+        if (target is Predator predator)
+        {
+            CheckPredatorBehavior(predator);
+        }
     }
 
     public struct TraitRange
@@ -478,6 +484,31 @@ public class GeneticAlgorithmBrain : MonoBehaviour  // #todo: its better to make
             this.min = min;
             this.max = max;
         }
+    }
+
+    #endregion
+
+
+    #region Predator behavior
+
+    void CheckPredatorBehavior(Predator predator)
+    {
+        if (predator.eatNeed > (env.eatPredator / population.Count)) // check eat
+        {
+            Debug.Log("");
+            Herbivore prey = FindRandomHerbivore();
+            if (prey != null)
+            {
+                predator.Kill(prey); // hungry gaaaaames
+            }
+        }
+    }
+
+    Herbivore FindRandomHerbivore()
+    {
+        Herbivore[] herbivores = FindObjectsOfType<Herbivore>();
+        if (herbivores.Length == 0) return null;
+        return herbivores[UnityEngine.Random.Range(0, herbivores.Length)];
     }
 
     #endregion
