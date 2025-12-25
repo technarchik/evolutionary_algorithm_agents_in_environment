@@ -77,7 +77,7 @@ public class Environment : MonoBehaviour
             temp = TempCalc(temp, wet, windStrength);
         }
         IsInitialized = true;
-        Debug.Log("Env changed");
+        Debug.Log($"Env changed!    temp: {temp} | wet: {wet} | wind: {windStrength} | eat predator: {eatPredator} | eat herbivore: {eatHerbivore}");
     }
 
     public void GenerateConditions()
@@ -118,7 +118,7 @@ public class Environment : MonoBehaviour
             StartNewEra();
     }
 
-    void StartNewEra()
+    public void StartNewEra()
     {
         era++;
         currentGenerationInEnv = 0;

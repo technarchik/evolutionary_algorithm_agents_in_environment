@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
-public class GeneticAlgorithmBrain : MonoBehaviour
+public class GeneticAlgorithmBrain : MonoBehaviour  // #todo: its better to make GA script (GeneticAlgorithm1.cs) without simulating and just use methods from it
 {
     public enum AnimalSpecies
     {
@@ -52,31 +52,46 @@ public class GeneticAlgorithmBrain : MonoBehaviour
 
     public float startDelay = 0.5f;
 
+    [Header("Era settings")]
+    public float eraDelay = 2f;
 
-    //private void Awake()
-    //{
-    //    env.Initialize();
-    //    RunGA();
-    //}
 
     private void Start()
     {
-        StartCoroutine(InitializeWithDelay());
-        StartCoroutine(Wait());
+        StartCoroutine(EraCycleCoroutine());
     }
 
-    private IEnumerator InitializeWithDelay()
+    private IEnumerator EraCycleCoroutine()
     {
         yield return new WaitUntil(() => env.IsInitialized);
+
+        while (true)
+        {
+            // init of new era
+            if (env.currentGenerationInEnv == 0)
+            {
+                Debug.Log("Initializing population for new era...");
+                InitializePopulation();
+            }
+
+            // GA for current era
+            yield return StartCoroutine(RunGA());
+
+            // change env to new era
+            env.StartNewEra();
+            Debug.Log("Era changed!");
+
+            // game doesnt stop, but wait for deltatime
+            float timer = 0f;
+            while (timer < eraDelay)
+            {
+                timer += Time.deltaTime;
+                yield return null;
+            }
+        }
     }
 
-    private IEnumerator Wait()
-    {
-        yield return new WaitForSeconds(startDelay);
-        RunGA();
-    }
-
-    void RunGA()
+    private IEnumerator RunGA()
     {
         InitializePopulation();
 
@@ -92,12 +107,19 @@ public class GeneticAlgorithmBrain : MonoBehaviour
                 ChangeStamina(population);
 
             env.NextGeneration();
-            Debug.Log(generation);
+
+            Debug.Log($"Generation {generation} complete");
+
+            yield return null;
         }
 
         Animal best = FindBestAnimal(population);
         ApplyBestToThisAnimal(best);
+
+        yield return null;
     }
+
+    #region GA methods
 
     void CalculateHP()
     {
@@ -457,4 +479,6 @@ public class GeneticAlgorithmBrain : MonoBehaviour
             this.max = max;
         }
     }
+
+    #endregion
 }
