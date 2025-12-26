@@ -49,7 +49,7 @@ public class Environment : MonoBehaviour
     public float TempCalc(float temp, float wet, float windStrength)
     {
         temp = 37 - ((37 - temp) / (0.68f - 0.0014f * wet + (1 / (1.76f + 1.4f * Mathf.Pow(windStrength, 0.75f)))));       // из формулы эквивалентно-эффективной температуры - ПРОВЕРИТЬ ЕЩЕ АДЕКВАТНОСТЬ ЦИФР
-        return temp;
+        return temp;                                                                                                       // додбавить еще последнюю часть!
     }
 
     public void Initialize()
