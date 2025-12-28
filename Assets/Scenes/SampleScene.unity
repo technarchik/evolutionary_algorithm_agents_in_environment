@@ -883,9 +883,11 @@ MonoBehaviour:
   staminaUpdateInterval: 5
   crossoverProbability: 0.5
   blxAlpha: 0.5
-  hpWeight: 0.05
+  hpWeight: 0.5
   abilitiesWeight: 1
-  eatWeight: 0
+  eatWeight: 1
+  fatSaveWeight: 2
+  fatSaveConst: 0
   timeForOneGeneration: 1
   simulationSpeed: 1
 --- !u!4 &637588603

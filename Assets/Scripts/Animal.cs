@@ -46,7 +46,7 @@ public class Animal : MonoBehaviour
         $"Temp: {tempResist:F2}\n" +
         $"Wet: {wetResist:F2}\n" +
         $"Fat: {fatSave:F1}\n" +
-        /*$"Eat: {eatNeed:F2}\n" +*/
+        $"Eat: {eatNeed:F2}\n" +
         $"Score: {score:F2}";
     }
 }

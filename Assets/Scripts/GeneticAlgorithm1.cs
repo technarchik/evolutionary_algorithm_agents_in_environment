@@ -483,16 +483,17 @@ public class GeneticAlgorithm1 : MonoBehaviour
                 eatN = (predators.Count * predator.eatNeed) / 60;
             if (env.difficultyMode == DifficultyMode.hardMode)
                 eatN = (predators.Count * predator.eatNeed) / 40;
-            
+
             //float ability = predator.huntAbility * 0.5f;
 
-            float abilitiesBonus = (speedN + staminaN) * 0.5f;
+            float abilitiesBonus = (0.3f + (1 - 0.3f) * (speedN + staminaN)); //(speedN + staminaN) * 0.5f;
             float hpPenalty = Mathf.Exp(-hpLose * hpWeight);
-            float eatPenalty = 1f - eatN;
+            float eatPenalty = Mathf.Exp(-eatN * 0.02f);
 
-            predator.score = 100 * (hpPenalty * (abilitiesBonus * abilitiesWeight + eatPenalty * eatWeight));
+            predator.score = 1000 * (hpPenalty * abilitiesBonus * eatPenalty);
+            //predator.score = 100 * (hpPenalty * (abilitiesBonus * abilitiesWeight + eatPenalty * eatWeight));
 
-            // Debug.Log($"PREDATOR - SCORE: {predator.score} ||| speedN: {speedN} | staminaN: {staminaN} | hpLoseN: {hpLoseN} | eatN: {eatN} ||| abilitiesBonus: {abilitiesBonus} | hpPenalty: {hpPenalty} | eatPenalty: {eatPenalty}");
+             Debug.Log($"PREDATOR - SCORE: {predator.score} ||| speedN: {speedN} | staminaN: {staminaN} | hpLoseN: {hpLoseN} | eatN: {eatN} ||| abilitiesBonus: {abilitiesBonus} | hpPenalty: {hpPenalty} | eatPenalty: {eatPenalty}");
         }
     }
 
@@ -507,26 +508,28 @@ public class GeneticAlgorithm1 : MonoBehaviour
             float speedN = Mathf.Clamp01(herbivore.speed / speedRange.max);
             float staminaN = Mathf.Clamp01(herbivore.stamina / staminaRange.max);
             float hpLoseN = Mathf.Clamp01(hpLose / 100);
-            float eatN = 0;
-            if (env.difficultyMode == DifficultyMode.easyMode)
-                eatN = (herbivores.Count * herbivore.eatNeed) / 70; // just max of interval from Environment - mb better do it as params from Env?   #todo
-            if (env.difficultyMode == DifficultyMode.mediumMode)
-                eatN = (herbivores.Count * herbivore.eatNeed) / 60;
-            if (env.difficultyMode == DifficultyMode.hardMode)
-                eatN = (herbivores.Count * herbivore.eatNeed) / 50;
+            //float eatN = 0;
+            //if (env.difficultyMode == DifficultyMode.easyMode)
+            //    eatN = (herbivores.Count * herbivore.eatNeed) / 70; // just max of interval from Environment - mb better do it as params from Env?   #todo
+            //if (env.difficultyMode == DifficultyMode.mediumMode)
+            //    eatN = (herbivores.Count * herbivore.eatNeed) / 60;
+            //if (env.difficultyMode == DifficultyMode.hardMode)
+            //    eatN = (herbivores.Count * herbivore.eatNeed) / 50;
 
             //float ability = herbivore.escapeAbility * 0.5f;
 
-            float abilitiesBonus = (speedN + staminaN) * 0.5f;
-            float fatSaveBonus = 0;
-            if (herbivore.fatSave >= 0.5f)
-                fatSaveBonus = 1;
+            float abilitiesBonus = (0.3f + (1 - 0.3f) * (speedN + staminaN)); //(speedN + staminaN) * 0.5f;         сомнения еще насчет того, стоит ли все вместе считать, может отдельно, как и другие показатели?     #todo
+            // float fatSaveBonus = 0;
+            //if (herbivore.fatSave >= 0.5f)
+            //    fatSaveBonus = 1;
+            float fatSaveBonus = 1 + 0.05f * Mathf.Clamp01(herbivore.fatSave);
             float hpPenalty = Mathf.Exp(-hpLose * hpWeight);
-            float eatPenalty = 1f - eatN;
+            //float eatPenalty = 1f - eatN;
 
-            herbivore.score = 100 * (hpPenalty * (abilitiesBonus * abilitiesWeight + eatPenalty * eatWeight + fatSaveConst * fatSaveBonus));
+            herbivore.score = 1000 * (hpPenalty * abilitiesBonus * fatSaveBonus);
+            //herbivore.score = 100 * (hpPenalty * (abilitiesBonus * abilitiesWeight + eatPenalty * eatWeight + fatSaveConst * fatSaveBonus));
 
-            // Debug.Log($"HERBIVORE - SCORE: {herbivore.score} ||| speedN: {speedN} | staminaN: {staminaN} | hpLoseN: {hpLoseN} | eatN: {eatN} ||| abilitiesBonus: {abilitiesBonus} | hpPenalty: {hpPenalty} | eatPenalty: {eatPenalty}");
+             Debug.Log($"HERBIVORE - SCORE: {herbivore.score} ||| speedN: {speedN} | staminaN: {staminaN} | hpLoseN: {hpLoseN}  ||| abilitiesBonus: {abilitiesBonus} | hpPenalty: {hpPenalty} | fatSaveBonus: {fatSaveBonus}");
         }
     }
 
@@ -534,18 +537,18 @@ public class GeneticAlgorithm1 : MonoBehaviour
     {
         foreach(var predator in predators)
         {
-            float temp = 0;
-            temp = CalculateDelta(predator.tempResist, env.temp) + CalculateDelta(predator.wetResist, env.wet);
-            predator.hp -= temp;
+            float penalty = 0;
+            penalty = CalculateDelta(predator.tempResist, env.temp) + CalculateDelta(predator.wetResist, env.wet);
+            predator.hp -= penalty;
         }
     }
     void CalculateHPHerbivore() // BTW i dont count hp lose if food is not enough - no, it will be count in stamina deprive
     {
         foreach (var herbivore in herbivores)
         {
-            float temp = 0;
-            temp = CalculateDelta(herbivore.tempResist, env.temp) + CalculateDelta(herbivore.wetResist, env.wet);
-            herbivore.hp -= temp;
+            float penalty = 0;
+            penalty = CalculateDelta(herbivore.tempResist, env.temp) + CalculateDelta(herbivore.wetResist, env.wet);
+            herbivore.hp -= penalty;
         }
     }
 
@@ -564,7 +567,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
         }
         else if (deviation > secondDeltaHPLose)
         {
-            penalty = 3;
+            penalty = 3;        // #todo мб тут все-таки повыше сделать? 
         }
         return penalty;
     }
@@ -799,6 +802,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
     {
         if (env.currentGenerationInEnv == 0)
             InitializePopulations();
+        // разобраться с тем, как производить эволюцию между эрами - продолжать с тем же набором или все-таки обнулять, как сейчас? #todo
     }
 
     #endregion
