@@ -70,6 +70,9 @@ public class GeneticAlgorithm1 : MonoBehaviour
 
     public static event Action PopulationCreated;
 
+    // benchmarks
+    [SerializeField] private Benchmark_1 benchmark_1;
+    [SerializeField] private Benchmark_2 benchmark_2;
 
     private void Awake()
     {
@@ -237,6 +240,10 @@ public class GeneticAlgorithm1 : MonoBehaviour
         // count fitnesses for animals
         EvaluateFitnessPredator();
         EvaluateFitnessHerbivore();
+
+        // HEREEEEEEEE????? ///////////////////////////////////////////////////////////////////////////    TEST
+        BenchmarkPredator();
+        BenchmarkHerbivore();
 
         // evolution of animals
         EvolvePredator();
@@ -807,7 +814,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
 
     #endregion
 
-    #region Logs
+    #region Logs and Benchmarks
 
     void LogBestAnimal(Animal animal)
     {
@@ -823,6 +830,37 @@ public class GeneticAlgorithm1 : MonoBehaviour
             $"FatSave: {animal.fatSave:F1} | " +
             $"Generation: {env.currentGenerationInEnv}"
         );
+    }
+
+    private float[] fitnessValueListPredator;
+    private float[] fitnessValueListHerbivore;
+
+    void BenchmarkPredator()
+    {
+        if (fitnessValueListPredator == null || fitnessValueListPredator.Length != predatorCount)
+        {
+            fitnessValueListPredator = new float[predatorCount];
+        }
+
+        for (int i = 0; i < predatorCount; i++)
+        {
+            fitnessValueListPredator[i] = predators[i].score;
+        }
+        benchmark_1.LogGeneration(env.currentGenerationInEnv, fitnessValueListPredator);
+    }
+
+    void BenchmarkHerbivore()
+    {
+        if (fitnessValueListHerbivore == null || fitnessValueListHerbivore.Length != herbivoreCount)
+        {
+            fitnessValueListHerbivore = new float[herbivoreCount];
+        }
+
+        for (int i = 0; i < herbivoreCount; i++)
+        {
+            fitnessValueListHerbivore[i] = herbivores[i].score;
+        }
+        benchmark_2.LogGeneration(env.currentGenerationInEnv, fitnessValueListHerbivore);
     }
 
     #endregion

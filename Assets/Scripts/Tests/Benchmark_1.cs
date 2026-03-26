@@ -15,7 +15,7 @@ public class Benchmark_1 : MonoBehaviour
         filePath = Path.Combine(Application.dataPath, "results_predator.csv");
 
         // adding headers
-        File.WriteAllText(filePath, "Generation, AvgFitness, MaxFitness\n");
+        File.WriteAllText(filePath, "Generation;AvgFitness;MaxFitness\n");
     }
 
     // call this method after creating every new population
@@ -27,7 +27,7 @@ public class Benchmark_1 : MonoBehaviour
         float avgFitness = fitnessValues.Average();
         float maxFitness = fitnessValues.Max();
 
-        string line = $"{generation},{avgFitness:F4},{maxFitness:F4}\n";
+        string line = $"{generation};{avgFitness:F4};{maxFitness:F4}\n";
         File.AppendAllText(filePath, line);
     }
 }
