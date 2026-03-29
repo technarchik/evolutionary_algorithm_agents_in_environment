@@ -67,6 +67,9 @@ public class GeneticAlgorithm1 : MonoBehaviour
     // for presenting the best animal
     private int lastEra = 0;
     private bool eraPauseActive = false;
+    // best animals themself
+    Predator bestPredator;
+    Herbivore bestHerbivore;
 
     public static event Action PopulationCreated;
 
@@ -241,7 +244,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
         EvaluateFitnessPredator();
         EvaluateFitnessHerbivore();
 
-        // HEREEEEEEEE????? ///////////////////////////////////////////////////////////////////////////    TEST
+        // TESTS
         BenchmarkPredator();
         BenchmarkHerbivore();
 
@@ -260,8 +263,8 @@ public class GeneticAlgorithm1 : MonoBehaviour
         if (env.currentGenerationInEnv + 1 >= env.generationMax && !eraPauseActive)
         {
             // looking for the bests
-            Predator bestPredator = FindBestAnimal(predators);
-            Herbivore bestHerbivore = FindBestAnimal(herbivores);
+            bestPredator = FindBestAnimal(predators);
+            bestHerbivore = FindBestAnimal(herbivores);
 
             // highlighting
             HighlightBestAnimal(predators, bestPredator, Color.yellow);
@@ -271,6 +274,10 @@ public class GeneticAlgorithm1 : MonoBehaviour
             Debug.Log($"--------- END OF ERA {env.era} ---------");
             LogBestAnimal(bestPredator);
             LogBestAnimal(bestHerbivore);
+
+            // TESTS
+            BenchmarkBestPredator();
+            //BenchmarkBestHerbivore();
 
             StartCoroutine(WaitAndStartNewEra());
             return;
@@ -700,6 +707,8 @@ public class GeneticAlgorithm1 : MonoBehaviour
                     renderer.material.color = Color.white;
             }
         }
+
+
     }
 
     // highlighting the best agent - doesnt working :_(
@@ -861,6 +870,15 @@ public class GeneticAlgorithm1 : MonoBehaviour
             fitnessValueListHerbivore[i] = herbivores[i].score;
         }
         benchmark_2.LogGeneration(env.currentGenerationInEnv, fitnessValueListHerbivore);
+    }
+
+    void BenchmarkBestPredator()
+    {
+        benchmark_1.LogBest(env, bestPredator, bestHerbivore);
+    }
+    void BenchmarkBestHerbivore()
+    {
+        benchmark_2.LogBest(env, bestHerbivore);
     }
 
     #endregion

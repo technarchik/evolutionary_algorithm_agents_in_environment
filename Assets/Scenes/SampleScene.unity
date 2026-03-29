@@ -289,7 +289,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   currentGenerationInEnv: 0
-  generationMax: 40
+  generationMax: 20
   era: 0
   difficultyMode: 0
   temp: 0
@@ -871,8 +871,8 @@ MonoBehaviour:
   env: {fileID: 210981247}
   predatorPrefab: {fileID: 7098561217780231439, guid: 709353ba4883d924dab194182fccd8ab, type: 3}
   herbivorePrefab: {fileID: 3741976878792127607, guid: 2202b7af5d694fb46860474232f247db, type: 3}
-  predatorCount: 25
-  herbivoreCount: 25
+  predatorCount: 10
+  herbivoreCount: 10
   mutationRate: 0.05
   crossoverRate: 0.9
   noiseOfMutation: 0.2
