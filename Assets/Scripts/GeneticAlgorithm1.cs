@@ -30,7 +30,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
     public int elitismCount = 2;
     public int tournamentSize = 3;
     public int staminaUpdateInterval = 5;
-    public float crossoverProbability = 0.5f;
+    public float crossoverProbability = 0.5f;  // trash - used in uniform crossover
     [Range(0f, 1f)] public float blxAlpha = 0.5f;
 
     [Header("Fitness weights")]
@@ -43,7 +43,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
     [Header("Initial ranges")]
     public TraitRange staminaRange = new TraitRange(5f, 20f);
     public TraitRange speedRange = new TraitRange(0.5f, 5f);
-    public TraitRange tempResistRange = new TraitRange(-30f, 50f);
+    public TraitRange tempResistRange = new TraitRange(-60f, 100f);
     public TraitRange wetResistRange = new TraitRange(20f, 100f);
     public TraitRange eatNeedRange = new TraitRange(1.2f, 2.8f);    // based on logic "everyone is feeded" - for every difficulty mode
     public TraitRange fatSaveRange = new TraitRange(0f, 1f);
@@ -73,12 +73,15 @@ public class GeneticAlgorithm1 : MonoBehaviour
 
     public static event Action PopulationCreated;
 
-    // benchmarks
+    // benchmarks & loggers
     [SerializeField] private Benchmark_1 benchmark_1;
     [SerializeField] private Benchmark_2 benchmark_2;
+    private CSVLogger csvLogger;
 
     private void Awake()
     {
+        csvLogger = new CSVLogger();
+
         //StartCoroutine(DelayUpdate());
         InitializeEnvironment();
         InitializePopulations();
@@ -237,12 +240,19 @@ public class GeneticAlgorithm1 : MonoBehaviour
 
     public void StepOfGeneration()
     {
-        CalculateHPPredator();
-        CalculateHPHerbivore();
+        if (env.currentGenerationInEnv != 0)
+        {
+            CalculateHPPredator();
+            CalculateHPHerbivore();
+        }
 
         // count fitnesses for animals
         EvaluateFitnessPredator();
         EvaluateFitnessHerbivore();
+
+        // logging
+        csvLogger.WritePredators(predators, env);
+        csvLogger.WriteHerbivores(herbivores, env);
 
         // TESTS
         BenchmarkPredator();
@@ -393,7 +403,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
             children.Add(TakeGenesFromAnimal(animals[i]));
         }
 
-        // crossover (needed tournament selection)
+        // crossover
         while (children.Count < animals.Count)
         {
             // selecting parents
@@ -501,10 +511,10 @@ public class GeneticAlgorithm1 : MonoBehaviour
             //float ability = predator.huntAbility * 0.5f;
 
             float abilitiesBonus = (0.3f + (1 - 0.3f) * (speedN + staminaN)); //(speedN + staminaN) * 0.5f;
-            float hpPenalty = Mathf.Exp(-hpLose * hpWeight);
+            float hpPenalty = Mathf.Exp(hpLoseN * hpWeight);
             float eatPenalty = Mathf.Exp(-eatN * 0.02f);
 
-            predator.score = 1000 * (hpPenalty * abilitiesBonus * eatPenalty);
+            predator.score -= /*100 * */(hpPenalty /* * abilitiesBonus * eatPenalty*/);
             //predator.score = 100 * (hpPenalty * (abilitiesBonus * abilitiesWeight + eatPenalty * eatWeight));
 
              Debug.Log($"PREDATOR - SCORE: {predator.score} ||| speedN: {speedN} | staminaN: {staminaN} | hpLoseN: {hpLoseN} | eatN: {eatN} ||| abilitiesBonus: {abilitiesBonus} | hpPenalty: {hpPenalty} | eatPenalty: {eatPenalty}");
@@ -537,10 +547,10 @@ public class GeneticAlgorithm1 : MonoBehaviour
             //if (herbivore.fatSave >= 0.5f)
             //    fatSaveBonus = 1;
             float fatSaveBonus = 1 + 0.05f * Mathf.Clamp01(herbivore.fatSave);
-            float hpPenalty = Mathf.Exp(-hpLose * hpWeight);
+            float hpPenalty = Mathf.Exp(hpLoseN * hpWeight);
             //float eatPenalty = 1f - eatN;
 
-            herbivore.score = 1000 * (hpPenalty * abilitiesBonus * fatSaveBonus);
+            herbivore.score -= /*100 * */(hpPenalty /* * abilitiesBonus * fatSaveBonus*/);
             //herbivore.score = 100 * (hpPenalty * (abilitiesBonus * abilitiesWeight + eatPenalty * eatWeight + fatSaveConst * fatSaveBonus));
 
              Debug.Log($"HERBIVORE - SCORE: {herbivore.score} ||| speedN: {speedN} | staminaN: {staminaN} | hpLoseN: {hpLoseN}  ||| abilitiesBonus: {abilitiesBonus} | hpPenalty: {hpPenalty} | fatSaveBonus: {fatSaveBonus}");
@@ -570,19 +580,20 @@ public class GeneticAlgorithm1 : MonoBehaviour
     {
         float penalty = 0;
         float delta = Math.Abs(animalCharact - envCharact);
-        float deviation = (100 * delta) / envCharact;
-        if (deviation <= firstDeltaHPLose)
-        {
-            penalty = 0;
-        }
-        else if (deviation > firstDeltaHPLose && deviation <= secondDeltaHPLose)
-        {
-            penalty = 1;
-        }
-        else if (deviation > secondDeltaHPLose)
-        {
-            penalty = 3;        // #todo мб тут все-таки повыше сделать? 
-        }
+        penalty = Mathf.Exp(delta * 0.2f);
+        //float deviation = (100 * delta) / envCharact;
+        //if (deviation <= firstDeltaHPLose)
+        //{
+        //    penalty = 0;
+        //}
+        //else if (deviation > firstDeltaHPLose && deviation <= secondDeltaHPLose)
+        //{
+        //    penalty = 1;
+        //}
+        //else if (deviation > secondDeltaHPLose)
+        //{
+        //    penalty = 3;        // #todo мб тут все-таки повыше сделать? 
+        //}
         return penalty;
     }
 
@@ -762,13 +773,14 @@ public class GeneticAlgorithm1 : MonoBehaviour
     {
         for (int i = 0; i < animals.Count; i++)
         {
+            animals[i].hp = 100f;
             animals[i].stamina = genes[i][0];
             animals[i].speed = genes[i][1];
             animals[i].tempResist = genes[i][2];
             animals[i].wetResist = genes[i][3];
             animals[i].eatNeed = genes[i][4];
             animals[i].fatSave = genes[i][5];
-            animals[i].score = 0f;
+            animals[i].score = 100f;
         }
     }
 

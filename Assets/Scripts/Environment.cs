@@ -25,12 +25,15 @@ public class Environment : MonoBehaviour
 
     public static event Action OnEnvironmentChanged;
 
+    [Header("Difficulty Settings")]
+    [SerializeField] private bool dynamic = true;
     public enum DifficultyMode
     {
         easyMode, mediumMode, hardMode
     }
     public DifficultyMode difficultyMode;
 
+    [Header("Conditions")]
     public float temp;
     public float wet;
     public float windStrength;
@@ -54,29 +57,35 @@ public class Environment : MonoBehaviour
 
     public void Initialize()
     {
-        if (era != 0)
+        if (dynamic)
         {
-            // set difficulty with probability
-            //Debug.Log("Env changed");
-            float random = UnityEngine.Random.value;   // from 0 to 1
+            // DYNAMIC: set difficulty with probability
+            if (era != 0)
+            {
+                float random = UnityEngine.Random.value;   // from 0 to 1
 
-            if (random < 0.5f)
-                difficultyMode = DifficultyMode.easyMode;         // 50%
-            else if (random < 0.7f)
-                difficultyMode = DifficultyMode.mediumMode;       // 30%
-            else
-                difficultyMode = DifficultyMode.hardMode;         // 20%
-
-            GenerateConditions();
-            temp = TempCalc(temp, wet, windStrength);
+                if (random < 0.5f)
+                    difficultyMode = DifficultyMode.easyMode;         // 50%
+                else if (random < 0.7f)
+                    difficultyMode = DifficultyMode.mediumMode;       // 30%
+                else
+                    difficultyMode = DifficultyMode.hardMode;         // 20%
+            }
+            else if (era == 0)
+            {
+                difficultyMode = DifficultyMode.easyMode;
+            }
         }
-        else if (era == 0)
+        else
         {
-            difficultyMode = DifficultyMode.easyMode;
-            GenerateConditions();
-            temp = TempCalc(temp, wet, windStrength);
+            // STATIC: difficultyMode is taken from the inspector
         }
+
+        GenerateConditions();
+        temp = TempCalc(temp, wet, windStrength);
+
         IsInitialized = true;
+
         Debug.Log($"Env changed!    temp: {temp} | wet: {wet} | wind: {windStrength} | eat predator: {eatPredator} | eat herbivore: {eatHerbivore}");
     }
 

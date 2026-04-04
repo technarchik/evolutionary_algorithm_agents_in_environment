@@ -289,9 +289,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   currentGenerationInEnv: 0
-  generationMax: 20
+  generationMax: 50
   era: 0
-  difficultyMode: 0
+  dynamic: 0
+  difficultyMode: 2
   temp: 0
   wet: 0
   windStrength: 0
@@ -871,19 +872,19 @@ MonoBehaviour:
   env: {fileID: 210981247}
   predatorPrefab: {fileID: 7098561217780231439, guid: 709353ba4883d924dab194182fccd8ab, type: 3}
   herbivorePrefab: {fileID: 3741976878792127607, guid: 2202b7af5d694fb46860474232f247db, type: 3}
-  predatorCount: 10
-  herbivoreCount: 10
+  predatorCount: 40
+  herbivoreCount: 40
   mutationRate: 0.05
   crossoverRate: 0.9
   noiseOfMutation: 0.2
-  firstDeltaHPLose: 20
-  secondDeltaHPLose: 30
+  firstDeltaHPLose: 10
+  secondDeltaHPLose: 20
   elitismCount: 5
   tournamentSize: 3
   staminaUpdateInterval: 5
   crossoverProbability: 0.5
   blxAlpha: 0.5
-  hpWeight: 0.5
+  hpWeight: 3
   abilitiesWeight: 1
   eatWeight: 1
   fatSaveWeight: 2
