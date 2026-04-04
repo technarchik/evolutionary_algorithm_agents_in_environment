@@ -65,7 +65,6 @@ public class GeneticAlgorithm1 : MonoBehaviour
     private long k = 0; //update counter
 
     // for presenting the best animal
-    private int lastEra = 0;
     private bool eraPauseActive = false;
     // best animals themself
     Predator bestPredator;
@@ -73,14 +72,20 @@ public class GeneticAlgorithm1 : MonoBehaviour
 
     public static event Action PopulationCreated;
 
-    // benchmarks & loggers
-    [SerializeField] private Benchmark_1 benchmark_1;
-    [SerializeField] private Benchmark_2 benchmark_2;
+    //// benchmarks & loggers
+    //[SerializeField] private Benchmark_1 benchmark_1;
+    //[SerializeField] private Benchmark_2 benchmark_2;
     private CSVLogger csvLogger;
+    [SerializeField] private Benchmark benchmark;
+    [SerializeField] private Benchmark benchmarkPredator;
+    [SerializeField] private Benchmark benchmarkHerbivore;
 
     private void Awake()
     {
-        csvLogger = new CSVLogger();
+        // initializing log and benchmark objects
+        csvLogger = new CSVLogger(this);
+        benchmarkPredator.Init("predator");
+        benchmarkHerbivore.Init("herbivore");
 
         //StartCoroutine(DelayUpdate());
         InitializeEnvironment();
@@ -254,7 +259,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
         csvLogger.WritePredators(predators, env);
         csvLogger.WriteHerbivores(herbivores, env);
 
-        // TESTS
+        // BENCHMARKS
         BenchmarkPredator();
         BenchmarkHerbivore();
 
@@ -285,15 +290,14 @@ public class GeneticAlgorithm1 : MonoBehaviour
             LogBestAnimal(bestPredator);
             LogBestAnimal(bestHerbivore);
 
-            // TESTS
-            BenchmarkBestPredator();
-            //BenchmarkBestHerbivore();
+            // BENCHMARKS
+            BenchmarkBestAnimals();
 
             StartCoroutine(WaitAndStartNewEra());
             return;
         }
 
-        foreach (var predator in  predators)
+        foreach (var predator in predators)
             predator.UpdateUI();
 
         foreach (var herbivore in herbivores)
@@ -390,7 +394,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
     }
 
     // method for evolving classes from Animal - doesnt matter what type
-    List<List<float>> EvolveAnimals<T>(List<T> animals) where T : Animal 
+    List<List<float>> EvolveAnimals<T>(List<T> animals) where T : Animal
     {
         // fitness (before it) -> sorting -> elitism -> crossover -> mutation
         // sorting
@@ -436,7 +440,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
 
     List<float> TakeGenesFromAnimal(Animal animal)
     {
-        List<float> geneList = new List<float> { animal.stamina, animal.speed, animal.tempResist, animal.wetResist, animal.eatNeed, animal.fatSave};
+        List<float> geneList = new List<float> { animal.stamina, animal.speed, animal.tempResist, animal.wetResist, animal.eatNeed, animal.fatSave };
         return geneList;
     }
 
@@ -447,7 +451,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
     {
         Animal bestAnimal = null;
         // may be can write this method another way
-        for (int i = 0; i < tournamentSize; i++) 
+        for (int i = 0; i < tournamentSize; i++)
         {
             var ind = list[UnityEngine.Random.Range(0, list.Count)];
             if (bestAnimal == null || ind.score > bestAnimal.score)
@@ -512,18 +516,18 @@ public class GeneticAlgorithm1 : MonoBehaviour
 
             float abilitiesBonus = (0.3f + (1 - 0.3f) * (speedN + staminaN)); //(speedN + staminaN) * 0.5f;
             float hpPenalty = Mathf.Exp(hpLoseN * hpWeight);
-            float eatPenalty = Mathf.Exp(-eatN * 0.02f);
+            float eatPenalty = Mathf.Exp(-eatN * eatWeight);
 
             predator.score -= /*100 * */(hpPenalty /* * abilitiesBonus * eatPenalty*/);
             //predator.score = 100 * (hpPenalty * (abilitiesBonus * abilitiesWeight + eatPenalty * eatWeight));
 
-             Debug.Log($"PREDATOR - SCORE: {predator.score} ||| speedN: {speedN} | staminaN: {staminaN} | hpLoseN: {hpLoseN} | eatN: {eatN} ||| abilitiesBonus: {abilitiesBonus} | hpPenalty: {hpPenalty} | eatPenalty: {eatPenalty}");
+            Debug.Log($"PREDATOR - SCORE: {predator.score} ||| speedN: {speedN} | staminaN: {staminaN} | hpLoseN: {hpLoseN} | eatN: {eatN} ||| abilitiesBonus: {abilitiesBonus} | hpPenalty: {hpPenalty} | eatPenalty: {eatPenalty}");
         }
     }
 
     void EvaluateFitnessHerbivore()
     {
-        foreach(var herbivore in herbivores)
+        foreach (var herbivore in herbivores)
         {
             // must count, what important for herbivores?
 
@@ -553,13 +557,13 @@ public class GeneticAlgorithm1 : MonoBehaviour
             herbivore.score -= /*100 * */(hpPenalty /* * abilitiesBonus * fatSaveBonus*/);
             //herbivore.score = 100 * (hpPenalty * (abilitiesBonus * abilitiesWeight + eatPenalty * eatWeight + fatSaveConst * fatSaveBonus));
 
-             Debug.Log($"HERBIVORE - SCORE: {herbivore.score} ||| speedN: {speedN} | staminaN: {staminaN} | hpLoseN: {hpLoseN}  ||| abilitiesBonus: {abilitiesBonus} | hpPenalty: {hpPenalty} | fatSaveBonus: {fatSaveBonus}");
+            Debug.Log($"HERBIVORE - SCORE: {herbivore.score} ||| speedN: {speedN} | staminaN: {staminaN} | hpLoseN: {hpLoseN}  ||| abilitiesBonus: {abilitiesBonus} | hpPenalty: {hpPenalty} | fatSaveBonus: {fatSaveBonus}");
         }
     }
 
     void CalculateHPPredator() // BTW i dont count hp lose if food is not enough - no, it will be count in stamina deprive
     {
-        foreach(var predator in predators)
+        foreach (var predator in predators)
         {
             float penalty = 0;
             penalty = CalculateDelta(predator.tempResist, env.temp) + CalculateDelta(predator.wetResist, env.wet);
@@ -718,8 +722,6 @@ public class GeneticAlgorithm1 : MonoBehaviour
                     renderer.material.color = Color.white;
             }
         }
-
-
     }
 
     // highlighting the best agent - doesnt working :_(
@@ -758,13 +760,13 @@ public class GeneticAlgorithm1 : MonoBehaviour
     #region Helpers
     // struct for applying intervals of characteristics
     // [System.Serializable]
-    public struct TraitRange        
+    public struct TraitRange
     {
         public float min, max;
-        public TraitRange(float min, float max) 
-        { 
-            this.min = min; 
-            this.max = max; 
+        public TraitRange(float min, float max)
+        {
+            this.min = min;
+            this.max = max;
         }
     }
 
@@ -853,44 +855,35 @@ public class GeneticAlgorithm1 : MonoBehaviour
         );
     }
 
-    private float[] fitnessValueListPredator;
-    private float[] fitnessValueListHerbivore;
+    // realization
+    List<Metric<Predator>> predatorMetrics = new List<Metric<Predator>>
+    {
+        new Metric<Predator> {Selector = x => x.score},
+        new Metric<Predator>{Selector = x => x.speed},
+        new Metric<Predator>{Selector = x => x.stamina},
+    };
+    List<Metric<Herbivore>> herbivoreMetrics = new List<Metric<Herbivore>>
+    {
+        new Metric<Herbivore> {Selector = x => x.score},
+        new Metric<Herbivore>{Selector = x => x.speed},
+        new Metric<Herbivore>{Selector = x => x.stamina},
+    };
 
     void BenchmarkPredator()
     {
-        if (fitnessValueListPredator == null || fitnessValueListPredator.Length != predatorCount)
-        {
-            fitnessValueListPredator = new float[predatorCount];
-        }
-
-        for (int i = 0; i < predatorCount; i++)
-        {
-            fitnessValueListPredator[i] = predators[i].score;
-        }
-        benchmark_1.LogGeneration(env.currentGenerationInEnv, fitnessValueListPredator);
+        BenchmarkUtils.BenchmarkAnimalBatch(predators, predatorMetrics, env, (env, gen, buffers) => benchmarkPredator.LogGeneration(gen, buffers, "predator"));
     }
 
     void BenchmarkHerbivore()
     {
-        if (fitnessValueListHerbivore == null || fitnessValueListHerbivore.Length != herbivoreCount)
-        {
-            fitnessValueListHerbivore = new float[herbivoreCount];
-        }
-
-        for (int i = 0; i < herbivoreCount; i++)
-        {
-            fitnessValueListHerbivore[i] = herbivores[i].score;
-        }
-        benchmark_2.LogGeneration(env.currentGenerationInEnv, fitnessValueListHerbivore);
+        BenchmarkUtils.BenchmarkAnimalBatch(herbivores, herbivoreMetrics, env, (env, gen, buffers) => benchmarkHerbivore.LogGeneration(gen, buffers, "herbivore"));
     }
 
-    void BenchmarkBestPredator()
+    void BenchmarkBestAnimals()
     {
-        benchmark_1.LogBest(env, bestPredator, bestHerbivore);
-    }
-    void BenchmarkBestHerbivore()
-    {
-        benchmark_2.LogBest(env, bestHerbivore);
+        benchmark.LogEnvInBest(env);
+        benchmarkPredator.LogBest(env, bestPredator);
+        benchmarkHerbivore.LogBest(env, bestHerbivore);
     }
 
     #endregion

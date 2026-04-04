@@ -2,17 +2,18 @@ using System.IO;
 using System.Text;
 using UnityEngine;
 using System.Collections.Generic;
-using System.Globalization;
 
 public class CSVLogger
 {
     private string predatorPath;
     private string herbivorePath;
 
-    private CultureInfo culture = CultureInfo.InvariantCulture;
+    [SerializeField] GeneticAlgorithm1 genAlg;
 
-    public CSVLogger()
+    public CSVLogger(GeneticAlgorithm1 genAlg)
     {
+        this.genAlg = genAlg;
+
         predatorPath = Path.Combine(Application.dataPath, "predators.csv");
         herbivorePath = Path.Combine(Application.dataPath, "herbivores.csv");
 
@@ -59,12 +60,11 @@ public class CSVLogger
         {
             var a = animals[i];
 
+            // todo: it was a fast way - change in future
             float hpLose = Mathf.Abs(100 - a.hp);
-
-            float speedN = Mathf.Clamp01(a.speed / 5f);
-            float staminaN = Mathf.Clamp01(a.stamina / 20f);
+            float speedN = Mathf.Clamp01(a.speed / genAlg.speedRange.max);
+            float staminaN = Mathf.Clamp01(a.stamina / genAlg.staminaRange.max);
             float hpLoseN = Mathf.Clamp01(hpLose / 100f);
-
             float eatN = 0f;
             if (a is Predator)
             {
@@ -75,36 +75,35 @@ public class CSVLogger
                 else
                     eatN = (animals.Count * a.eatNeed) / 40f;
             }
-
             float abilitiesBonus = (0.3f + (1 - 0.3f) * (speedN + staminaN));
-            float hpPenalty = Mathf.Exp(-hpLose * 4f);
-            float eatPenalty = Mathf.Exp(-eatN * 0.02f);
+            float hpPenalty = Mathf.Exp(hpLoseN * genAlg.hpWeight);
+            float eatPenalty = Mathf.Exp(eatN * genAlg.eatWeight);
 
             sb.AppendLine(string.Join(";",
                 env.era.ToString(),
                 env.currentGenerationInEnv.ToString(),
                 env.difficultyMode.ToString(),
-                env.temp.ToString(culture),
-                env.wet.ToString(culture),
-                env.windStrength.ToString(culture),
+                env.temp.ToString(),
+                env.wet.ToString(),
+                env.windStrength.ToString(),
                 env.eatPredator.ToString(),
                 env.eatHerbivore.ToString(),
                 i.ToString(),
-                a.score.ToString(culture),
-                a.hp.ToString(culture),
-                a.stamina.ToString(culture),
-                a.speed.ToString(culture),
-                a.tempResist.ToString(culture),
-                a.wetResist.ToString(culture),
-                a.fatSave.ToString(culture),
-                a.eatNeed.ToString(culture),
-                speedN.ToString(culture),
-                staminaN.ToString(culture),
-                hpLoseN.ToString(culture),
-                eatN.ToString(culture),
-                abilitiesBonus.ToString(culture),
-                hpPenalty.ToString(culture),
-                eatPenalty.ToString(culture)
+                a.score.ToString(),
+                a.hp.ToString(),
+                a.stamina.ToString(),
+                a.speed.ToString(),
+                a.tempResist.ToString(),
+                a.wetResist.ToString(),
+                a.fatSave.ToString(),
+                a.eatNeed.ToString(),
+                speedN.ToString(),
+                staminaN.ToString(),
+                hpLoseN.ToString(),
+                eatN.ToString(),
+                abilitiesBonus.ToString(),
+                hpPenalty.ToString(),
+                eatPenalty.ToString()
             ));
         }
 
