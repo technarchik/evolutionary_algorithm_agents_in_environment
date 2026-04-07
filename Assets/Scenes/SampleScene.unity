@@ -874,21 +874,22 @@ MonoBehaviour:
   herbivorePrefab: {fileID: 3741976878792127607, guid: 2202b7af5d694fb46860474232f247db, type: 3}
   predatorCount: 40
   herbivoreCount: 40
-  mutationRate: 0.05
-  crossoverRate: 0.9
+  oneEraMode: 1
+  mutationProbability: 0.05
+  crossoverProbability: 0.9
   noiseOfMutation: 0.2
   firstDeltaHPLose: 10
   secondDeltaHPLose: 20
   elitismCount: 5
   tournamentSize: 3
   staminaUpdateInterval: 5
-  crossoverProbability: 0.5
+  crossoverRate: 0.5
   blxAlpha: 0.5
   hpWeight: 3
-  abilitiesWeight: 1
-  eatWeight: 1
-  fatSaveWeight: 2
-  fatSaveConst: 0
+  abilitiesWeight: 2
+  eatWeight: 2
+  fatSaveWeight: 0.5
+  staminaDebuffing: 2
   timeForOneGeneration: 1
   simulationSpeed: 1
   benchmark: {fileID: 2053211955}
@@ -1995,6 +1996,51 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1301066337}
   m_CullTransparentMesh: 1
+--- !u!1 &1388581840
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1388581842}
+  - component: {fileID: 1388581841}
+  m_Layer: 0
+  m_Name: PythonScriptManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1388581841
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1388581840}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4866ed3740610d24d9d7a622ef4c282b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  genAlg: {fileID: 637588602}
+--- !u!4 &1388581842
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1388581840}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 8.425278, y: 6.222527, z: -10.647747}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 8
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1404122189
 GameObject:
   m_ObjectHideFlags: 0

@@ -22,7 +22,9 @@ public class Benchmark : MonoBehaviour
             "Generation;" +
             "AvgFitness;MaxFitness;MinFitness;StdDevFitness;" +
             "AvgStamina;MaxStamina;MinStamina;StdDevStamina;" +
-            "AvgSpeed;MaxSpeed;MinSpeed;StdDevSpeed\n"
+            "AvgSpeed;MaxSpeed;MinSpeed;StdDevSpeed;" +
+            "AvgEatNeed;MaxEatNeed;MinEatNeed;StdDevEatNeed;" +
+            "AvgFatSave;MaxFatSave;MinFatSave;StdDevFatSave\n"
         );
 
         filePath_best = Path.Combine(Application.dataPath, "results_best.csv");
@@ -37,16 +39,20 @@ public class Benchmark : MonoBehaviour
         if (metricsBuffers == null || metricsBuffers.Count == 0)
             return;
 
-        // 0 - fitness, 1 - speed, 2 - stamina
+        // 0 - fitness, 1 - speed, 2 - stamina, 3 - eatNeed, 4 - fatSave
         var fitness = metricsBuffers[0];
         var speed = metricsBuffers[1];
         var stamina = metricsBuffers[2];
+        var eatNeed = metricsBuffers[3];
+        var fatSave = metricsBuffers[4];
 
         string line = generation.ToString();
 
         line += ComputeStats(fitness);
         line += ComputeStats(speed);
         line += ComputeStats(stamina);
+        line += ComputeStats(eatNeed);
+        line += ComputeStats(fatSave);
 
         File.AppendAllText(path, line + "\n");    
     }

@@ -1,7 +1,9 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using UnityEditorInternal.VR;
 using UnityEngine;
-using System.Collections.Generic;
+using static Environment;
 
 public class CSVLogger
 {
@@ -65,19 +67,27 @@ public class CSVLogger
             float speedN = Mathf.Clamp01(a.speed / genAlg.speedRange.max);
             float staminaN = Mathf.Clamp01(a.stamina / genAlg.staminaRange.max);
             float hpLoseN = Mathf.Clamp01(hpLose / 100f);
+            float hpPenalty = 0f;
+            float abilitiesBonus = 0f;
             float eatN = 0f;
-            if (a is Predator)
+            float deltaEat = 0f;
+            float eatPenalty = 0f;
+
+            deltaEat = env.eatPredator - animals[i].eatNeed;
+
+            if (deltaEat < 0)
             {
-                if (env.difficultyMode == Environment.DifficultyMode.easyMode)
-                    eatN = (animals.Count * a.eatNeed) / 70f;
-                else if (env.difficultyMode == Environment.DifficultyMode.mediumMode)
-                    eatN = (animals.Count * a.eatNeed) / 60f;
-                else
-                    eatN = (animals.Count * a.eatNeed) / 40f;
+                if (env.difficultyMode == DifficultyMode.easyMode)
+                    eatN = Mathf.Clamp01(animals[i].eatNeed / env.eatPred_Range_Easy.max);
+                else if (env.difficultyMode == DifficultyMode.mediumMode)
+                    eatN = Mathf.Clamp01(animals[i].eatNeed / env.eatPred_Range_Medium.max);
+                else if (env.difficultyMode == DifficultyMode.hardMode)
+                    eatN = Mathf.Clamp01(animals[i].eatNeed / env.eatPred_Range_Hard.max);
+                eatPenalty = Mathf.Exp(eatN * genAlg.eatWeight);
             }
-            float abilitiesBonus = (0.3f + (1 - 0.3f) * (speedN + staminaN));
-            float hpPenalty = Mathf.Exp(hpLoseN * genAlg.hpWeight);
-            float eatPenalty = Mathf.Exp(eatN * genAlg.eatWeight);
+
+            abilitiesBonus = Mathf.Exp((speedN + staminaN) * genAlg.abilitiesWeight);
+            hpPenalty = Mathf.Exp(hpLoseN * genAlg.hpWeight);
 
             sb.AppendLine(string.Join(";",
                 env.era.ToString(),

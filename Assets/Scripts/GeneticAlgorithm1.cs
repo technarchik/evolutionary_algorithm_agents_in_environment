@@ -22,15 +22,16 @@ public class GeneticAlgorithm1 : MonoBehaviour
     public int herbivoreCount = 25;
 
     [Header("GA parameters")]
-    [Range(0f, 1f)] public float mutationRate = 0.05f;
-    [Range(0f, 1f)] public float crossoverRate = 0.9f;
+    public bool oneEraMode = false;
+    [Range(0f, 1f)] public float mutationProbability = 0.05f;
+    [Range(0f, 1f)] public float crossoverProbability = 0.9f;
     public float noiseOfMutation = 0.1f;
     public int firstDeltaHPLose = 10;
     public int secondDeltaHPLose = 20;
     public int elitismCount = 2;
     public int tournamentSize = 3;
     public int staminaUpdateInterval = 5;
-    public float crossoverProbability = 0.5f;  // trash - used in uniform crossover
+    public float crossoverRate = 0.5f;  // trash - used in uniform crossover
     [Range(0f, 1f)] public float blxAlpha = 0.5f;
 
     [Header("Fitness weights")]
@@ -38,14 +39,14 @@ public class GeneticAlgorithm1 : MonoBehaviour
     public float abilitiesWeight = 1f;
     public float eatWeight = 0.5f;
     public float fatSaveWeight = 2f;
-    public float fatSaveConst = 0f;
+    public float staminaDebuffing = 2f; // go down because of increasing fatsave ability (heavy animal)
 
     [Header("Initial ranges")]
-    public TraitRange staminaRange = new TraitRange(5f, 20f);
+    public TraitRange staminaRange = new TraitRange(5f, 20f);       // max was 20f
     public TraitRange speedRange = new TraitRange(0.5f, 5f);
     public TraitRange tempResistRange = new TraitRange(-60f, 100f);
     public TraitRange wetResistRange = new TraitRange(20f, 100f);
-    public TraitRange eatNeedRange = new TraitRange(1.2f, 2.8f);    // based on logic "everyone is feeded" - for every difficulty mode
+    public TraitRange eatNeedRange = new TraitRange(2f, 6f);    // based on logic "everyone is feeded" - for every difficulty mode
     public TraitRange fatSaveRange = new TraitRange(0f, 1f);
 
     // 2 populations that keep predators and herbivores separately
@@ -72,10 +73,10 @@ public class GeneticAlgorithm1 : MonoBehaviour
 
     public static event Action PopulationCreated;
 
-    //// benchmarks & loggers
-    //[SerializeField] private Benchmark_1 benchmark_1;
-    //[SerializeField] private Benchmark_2 benchmark_2;
+    // benchmarks & loggers
     private CSVLogger csvLogger;
+    private PythonScriptManager pythonScriptManager;
+    private bool plotAlreadyStarted = false;
     [SerializeField] private Benchmark benchmark;
     [SerializeField] private Benchmark benchmarkPredator;
     [SerializeField] private Benchmark benchmarkHerbivore;
@@ -96,6 +97,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
     private void Start()
     {
         Debug.Log("Start");
+        pythonScriptManager = new PythonScriptManager(this);
     }
 
     IEnumerator DelayUpdate()
@@ -121,11 +123,11 @@ public class GeneticAlgorithm1 : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (k % 1 == 0)  //update only once per 1 physics updates
+        if (k % 1 == 0)  // update only once per 1 physics updates
         {
             k = 0;
-            //Debug.Log("FixedUpdate");
-            if (!simulationIsRunning) //////////////////////////////////////////////////////////////////////////             for highlighting the best
+            // Debug.Log("FixedUpdate");
+            if (!simulationIsRunning) // for highlighting the best - doesnt work (dont needed anyway)
                 return;
             generationTimer += Time.deltaTime * simulationSpeed;
 
@@ -245,6 +247,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
 
     public void StepOfGeneration()
     {
+        Debug.Log($"Зашло в генерацию");
         if (env.currentGenerationInEnv != 0)
         {
             CalculateHPPredator();
@@ -270,6 +273,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
         // (de)buffing the stamina every staminaUpdateInterval
         if (env.currentGenerationInEnv % staminaUpdateInterval == 0)
         {
+            // ChangeStamina();
             ChangeStamina(predators);
             ChangeStamina(herbivores);
         }
@@ -307,21 +311,14 @@ public class GeneticAlgorithm1 : MonoBehaviour
         ApplyNextGeneration(predators, genesNextGenPredators);
         ApplyNextGeneration(herbivores, genesNextGenHerbivores);
 
-        //// for presenting the best animal
-        //if (env.currentGenerationInEnv + 1 >= env.generationMax && !eraPauseActive)
-        //{
-        //    StartCoroutine(ShowBestAnimal());
-        //    return;
-        //}
-
         env.NextGeneration();
-
-        //// for presenting the best animal
-        //if (env.era != lastEra && !eraPauseActive)
-        //{
-        //    lastEra = env.era;
-        //    StartCoroutine(ShowBestAnimal());
-        //}
+        
+        // showing the plots
+        if (env.era == 1 && !plotAlreadyStarted)
+        {
+            plotAlreadyStarted = true;
+            pythonScriptManager.StartPyScript("fitness");
+        }
     }
 
     IEnumerator WaitAndStartNewEra()
@@ -423,7 +420,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
             var genesFather = TakeGenesFromAnimal(father);
 
             // crossover mechanism
-            if (UnityEngine.Random.value < crossoverRate)
+            if (UnityEngine.Random.value < crossoverProbability)
                 CrossoverAlgorithm(genesMother, genesFather);
 
             // mutation mechanism
@@ -504,22 +501,29 @@ public class GeneticAlgorithm1 : MonoBehaviour
             float speedN = Mathf.Clamp01(predator.speed / speedRange.max);
             float staminaN = Mathf.Clamp01(predator.stamina / staminaRange.max);
             float hpLoseN = Mathf.Clamp01(hpLose / 100);
-            float eatN = 0;
-            if (env.difficultyMode == DifficultyMode.easyMode)
-                eatN = (predators.Count * predator.eatNeed) / 70; // just max of interval from Environment - mb better do it as params from Env?   #todo
-            if (env.difficultyMode == DifficultyMode.mediumMode)
-                eatN = (predators.Count * predator.eatNeed) / 60;
-            if (env.difficultyMode == DifficultyMode.hardMode)
-                eatN = (predators.Count * predator.eatNeed) / 40;
+            float hpPenalty = 0f;
+            float abilitiesBonus = 0f;
+            float eatN = 0f;
+            float deltaEat = 0f;
+            float eatPenalty = 0f;
 
-            //float ability = predator.huntAbility * 0.5f;
+            deltaEat = env.eatPredator - predator.eatNeed;
 
-            float abilitiesBonus = (0.3f + (1 - 0.3f) * (speedN + staminaN)); //(speedN + staminaN) * 0.5f;
-            float hpPenalty = Mathf.Exp(hpLoseN * hpWeight);
-            float eatPenalty = Mathf.Exp(-eatN * eatWeight);
+            if (deltaEat < 0)
+            {
+                if (env.difficultyMode == DifficultyMode.easyMode)
+                    eatN = Mathf.Clamp01(predator.eatNeed / env.eatPred_Range_Easy.max);
+                else if (env.difficultyMode == DifficultyMode.mediumMode)
+                    eatN = Mathf.Clamp01(predator.eatNeed / env.eatPred_Range_Medium.max);
+                else if (env.difficultyMode == DifficultyMode.hardMode)
+                    eatN = Mathf.Clamp01(predator.eatNeed / env.eatPred_Range_Hard.max);
+                eatPenalty = Mathf.Exp(eatN * eatWeight);
+            }
 
-            predator.score -= /*100 * */(hpPenalty /* * abilitiesBonus * eatPenalty*/);
-            //predator.score = 100 * (hpPenalty * (abilitiesBonus * abilitiesWeight + eatPenalty * eatWeight));
+            abilitiesBonus = Mathf.Exp((speedN + staminaN) * abilitiesWeight);
+            hpPenalty = Mathf.Exp(hpLoseN * hpWeight);
+
+            predator.score = (predator.score - hpPenalty + abilitiesBonus - eatPenalty);
 
             Debug.Log($"PREDATOR - SCORE: {predator.score} ||| speedN: {speedN} | staminaN: {staminaN} | hpLoseN: {hpLoseN} | eatN: {eatN} ||| abilitiesBonus: {abilitiesBonus} | hpPenalty: {hpPenalty} | eatPenalty: {eatPenalty}");
         }
@@ -534,28 +538,37 @@ public class GeneticAlgorithm1 : MonoBehaviour
             // normilizing
             float hpLose = Math.Abs(100 - herbivore.hp);
             float speedN = Mathf.Clamp01(herbivore.speed / speedRange.max);
-            float staminaN = Mathf.Clamp01(herbivore.stamina / staminaRange.max);
             float hpLoseN = Mathf.Clamp01(hpLose / 100);
-            //float eatN = 0;
-            //if (env.difficultyMode == DifficultyMode.easyMode)
-            //    eatN = (herbivores.Count * herbivore.eatNeed) / 70; // just max of interval from Environment - mb better do it as params from Env?   #todo
-            //if (env.difficultyMode == DifficultyMode.mediumMode)
-            //    eatN = (herbivores.Count * herbivore.eatNeed) / 60;
-            //if (env.difficultyMode == DifficultyMode.hardMode)
-            //    eatN = (herbivores.Count * herbivore.eatNeed) / 50;
+            float hpPenalty = 0f;
+            float abilitiesBonus = 0f;
+            float fatSaveBonus = 0f;
+            float deltaFreeEat = 0f;
 
-            //float ability = herbivore.escapeAbility * 0.5f;
+            deltaFreeEat = env.eatHerbivore - herbivore.eatNeed;
+            float deltaFreeEatN = Mathf.Clamp01(deltaFreeEat);
 
-            float abilitiesBonus = (0.3f + (1 - 0.3f) * (speedN + staminaN)); //(speedN + staminaN) * 0.5f;         сомнения еще насчет того, стоит ли все вместе считать, может отдельно, как и другие показатели?     #todo
-            // float fatSaveBonus = 0;
-            //if (herbivore.fatSave >= 0.5f)
-            //    fatSaveBonus = 1;
-            float fatSaveBonus = 1 + 0.05f * Mathf.Clamp01(herbivore.fatSave);
-            float hpPenalty = Mathf.Exp(hpLoseN * hpWeight);
-            //float eatPenalty = 1f - eatN;
+            if (deltaFreeEatN > 0)
+            {
+                fatSaveBonus = Mathf.Exp(herbivore.fatSave * (deltaFreeEatN * fatSaveWeight));
+            }
+            else if (deltaFreeEatN == 0)
+            {
+                fatSaveBonus = Mathf.Exp(herbivore.fatSave * (fatSaveWeight / 2));
+            }
 
-            herbivore.score -= /*100 * */(hpPenalty /* * abilitiesBonus * fatSaveBonus*/);
-            //herbivore.score = 100 * (hpPenalty * (abilitiesBonus * abilitiesWeight + eatPenalty * eatWeight + fatSaveConst * fatSaveBonus));
+            // debuffing stamina
+            if (deltaFreeEatN != 0)
+                herbivore.stamina = herbivore.stamina * Math.Abs(deltaFreeEatN);
+            // normilizing stamina
+            float staminaN = Mathf.Clamp01(herbivore.stamina / staminaRange.max);
+
+
+            // мб менять staminaN в зависимости от fatsave?
+            abilitiesBonus = Mathf.Exp((speedN + staminaN) * abilitiesWeight); // сомнения еще насчет того, стоит ли все вместе считать, может отдельно, как и другие показатели?     #todo
+
+            hpPenalty = Mathf.Exp(hpLoseN * hpWeight);
+
+            herbivore.score = (herbivore.score - hpPenalty + abilitiesBonus + fatSaveBonus);
 
             Debug.Log($"HERBIVORE - SCORE: {herbivore.score} ||| speedN: {speedN} | staminaN: {staminaN} | hpLoseN: {hpLoseN}  ||| abilitiesBonus: {abilitiesBonus} | hpPenalty: {hpPenalty} | fatSaveBonus: {fatSaveBonus}");
         }
@@ -659,7 +672,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
     {
         for (int i = 0; i < gene.Count; i++)
         {
-            if (UnityEngine.Random.value < mutationRate)
+            if (UnityEngine.Random.value < mutationProbability)
             {
                 // VARIANT 1: without checking allowed interval
                 // gene[i] += UnityEngine.Random.Range(-noiseOfMutation, noiseOfMutation); 
@@ -680,13 +693,20 @@ public class GeneticAlgorithm1 : MonoBehaviour
 
 
     #region Stamina
-    // or plus 5?
+
+    // increasing the stamina - this version is trash
     public void ChangeStamina<T>(List<T> list) where T : Animal
     {
         foreach (var animal in list)
             animal.stamina = Mathf.Clamp(animal.stamina + UnityEngine.Random.Range(-1f, 1f), staminaRange.min, staminaRange.max);   // should allow to minus the stamina ??
     }
 
+    // increasing the stamina
+    public void ChangeStamina()
+    {
+        staminaRange.max += 2;
+    }
+    
     #endregion
 
     #region Choosing the best
@@ -858,15 +878,19 @@ public class GeneticAlgorithm1 : MonoBehaviour
     // realization
     List<Metric<Predator>> predatorMetrics = new List<Metric<Predator>>
     {
-        new Metric<Predator> {Selector = x => x.score},
+        new Metric<Predator>{Selector = x => x.score},
         new Metric<Predator>{Selector = x => x.speed},
         new Metric<Predator>{Selector = x => x.stamina},
+        new Metric<Predator>{Selector = x => x.eatNeed},
+        new Metric<Predator>{Selector = x => x.fatSave},
     };
     List<Metric<Herbivore>> herbivoreMetrics = new List<Metric<Herbivore>>
     {
-        new Metric<Herbivore> {Selector = x => x.score},
+        new Metric<Herbivore>{Selector = x => x.score},
         new Metric<Herbivore>{Selector = x => x.speed},
         new Metric<Herbivore>{Selector = x => x.stamina},
+        new Metric<Herbivore>{Selector = x => x.eatNeed},
+        new Metric<Herbivore>{Selector = x => x.fatSave},
     };
 
     void BenchmarkPredator()

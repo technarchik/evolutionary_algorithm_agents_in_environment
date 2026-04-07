@@ -33,12 +33,32 @@ public class Environment : MonoBehaviour
     }
     public DifficultyMode difficultyMode;
 
-    [Header("Conditions")]
+    [Header("Current Conditions")]
     public float temp;
     public float wet;
     public float windStrength;
     public float eatPredator;
     public float eatHerbivore;
+
+    [Header("Conditions Ranges")]
+    // easyMode
+    public TraitRange temp_Range_Easy = new(10, 20);
+    public TraitRange wet_Range_Easy = new(40, 55);
+    public TraitRange wind_Range_Easy = new(0, 2);
+    public TraitRange eatPred_Range_Easy = new(4, 7);
+    public TraitRange eatHerb_Range_Easy = new(4, 7);
+    // mediumMode
+    public TraitRange temp_Range_Medium = new(-10, 30);
+    public TraitRange wet_Range_Medium = new(30, 70);
+    public TraitRange wind_Range_Medium = new(3, 9);
+    public TraitRange eatPred_Range_Medium = new(2, 6);
+    public TraitRange eatHerb_Range_Medium = new(2, 6);
+    // hardMode
+    public TraitRange temp_Range_Hard = new(-30, 50);
+    public TraitRange wet_Range_Hard = new(20, 100);
+    public TraitRange wind_Range_Hard = new(10, 18);
+    public TraitRange eatPred_Range_Hard = new(1, 3);
+    public TraitRange eatHerb_Range_Hard = new(2, 4);
 
     public bool IsInitialized { get; private set; }
 
@@ -94,25 +114,25 @@ public class Environment : MonoBehaviour
         switch (difficultyMode)
         {
             case DifficultyMode.easyMode:
-                temp = UnityEngine.Random.Range(10, 20);        // если че, можно еще UnityEngine.Random.Range
-                wet = UnityEngine.Random.Range(40, 55);
-                windStrength = UnityEngine.Random.Range(0, 2);
-                eatPredator = UnityEngine.Random.Range(50, 70);        // мб здесь тоже в зависимости от ветра и всего остального генерить диапазон? - »Ћ» «јЅ»“№??
-                eatHerbivore = UnityEngine.Random.Range(50, 70);
+                temp =          UnityEngine.Random.Range(temp_Range_Easy.min, temp_Range_Easy.max);        // если че, можно еще UnityEngine.Random.Range
+                wet =           UnityEngine.Random.Range(wet_Range_Easy.min, wet_Range_Easy.max);
+                windStrength =  UnityEngine.Random.Range(wind_Range_Easy.min, wind_Range_Easy.max);
+                eatPredator =   UnityEngine.Random.Range(eatPred_Range_Easy.min, eatPred_Range_Easy.max);
+                eatHerbivore =  UnityEngine.Random.Range(eatHerb_Range_Easy.min, eatHerb_Range_Easy.max);
                 break;
             case DifficultyMode.mediumMode:
-                temp = UnityEngine.Random.Range(-10, 30);
-                wet = UnityEngine.Random.Range(30, 70);
-                windStrength = UnityEngine.Random.Range(3, 9);
-                eatPredator = UnityEngine.Random.Range(40, 60);
-                eatHerbivore = UnityEngine.Random.Range(40, 60);
+                temp =          UnityEngine.Random.Range(temp_Range_Medium.min, temp_Range_Medium.max);
+                wet =           UnityEngine.Random.Range(wet_Range_Medium.min, wet_Range_Medium.max);
+                windStrength =  UnityEngine.Random.Range(wind_Range_Medium.min, wind_Range_Medium.max);
+                eatPredator =   UnityEngine.Random.Range(eatPred_Range_Medium.min, eatPred_Range_Medium.max);
+                eatHerbivore =  UnityEngine.Random.Range(eatHerb_Range_Medium.min, eatHerb_Range_Medium.max);
                 break;
             case DifficultyMode.hardMode:
-                temp = UnityEngine.Random.Range(-30, 50);
-                wet = UnityEngine.Random.Range(20, 100);
-                windStrength = UnityEngine.Random.Range(10, 18);
-                eatPredator = UnityEngine.Random.Range(20, 40);
-                eatHerbivore = UnityEngine.Random.Range(30, 50);
+                temp =          UnityEngine.Random.Range(temp_Range_Hard.min, temp_Range_Hard.max);
+                wet =           UnityEngine.Random.Range(wet_Range_Hard.min, wet_Range_Hard.max);
+                windStrength =  UnityEngine.Random.Range(wind_Range_Hard.min, wind_Range_Hard.max);
+                eatPredator =   UnityEngine.Random.Range(eatPred_Range_Hard.min, eatPred_Range_Hard.max);
+                eatHerbivore =  UnityEngine.Random.Range(eatHerb_Range_Hard.min, eatHerb_Range_Hard.max);
                 break;
         }
         OnEnvironmentChanged?.Invoke();
@@ -133,5 +153,16 @@ public class Environment : MonoBehaviour
         currentGenerationInEnv = 0;
         Initialize();
         OnEnvironmentChanged?.Invoke();
+    }
+
+    // struct for applying intervals of characteristics
+    public struct TraitRange
+    {
+        public float min, max;
+        public TraitRange(float min, float max)
+        {
+            this.min = min;
+            this.max = max;
+        }
     }
 }
