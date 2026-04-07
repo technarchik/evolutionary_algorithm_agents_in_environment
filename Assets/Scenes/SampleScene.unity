@@ -874,7 +874,7 @@ MonoBehaviour:
   herbivorePrefab: {fileID: 3741976878792127607, guid: 2202b7af5d694fb46860474232f247db, type: 3}
   predatorCount: 40
   herbivoreCount: 40
-  oneEraMode: 0
+  oneEraMode: 1
   mutationProbability: 0.05
   crossoverProbability: 0.9
   noiseOfMutation: 0.2

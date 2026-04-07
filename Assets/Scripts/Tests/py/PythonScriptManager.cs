@@ -14,7 +14,7 @@ public class PythonScriptManager : MonoBehaviour
     {
         // todo: add check of existng file
         // and mb list of names of files
-        // and mb this method will contain a lot of methods  or recieve a lot of names {name} and after that just opening several plots .py
+        // and mb this method will contain a lot of methods or recieve a lot of names {name} and after that just opening several plots .py
         // and rewrite loggers for new system of reading plots !!!
         ProcessStartInfo psi = new ProcessStartInfo
         {
