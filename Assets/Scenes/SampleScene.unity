@@ -289,7 +289,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   currentGenerationInEnv: 0
-  generationMax: 50
+  generationMax: 100
   era: 0
   dynamic: 1
   difficultyMode: 2

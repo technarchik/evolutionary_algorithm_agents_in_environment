@@ -34,7 +34,7 @@ else:
 
 #---------
 
-avg_columns = [col for col in first_run.columns if col.startswith("AvgFitness")]
+avg_columns = [col for col in first_run.columns if col.startswith("StdDevFitness")]
 
 #---------
 
@@ -50,9 +50,9 @@ for i, col in enumerate(avg_columns):
         label=col
     )
 
-plt.xlabel("Generation")
+plt.xlabel("Generation - Herbivores")
 plt.ylabel("Value")
-plt.title("Evolution of Average Metrics")
+plt.title("Evolution of Standart Deviation of Fitness")
 
 # Верхняя граница Y жестко, нижняя автоматическая
 #plt.ylim(bottom=None, top=101)

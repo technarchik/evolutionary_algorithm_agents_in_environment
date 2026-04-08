@@ -10,7 +10,7 @@ public class PythonScriptManager : MonoBehaviour
     {
         this.genAlg = genAlg;
     }
-    public void StartPyScript(string name)
+    public void StartPyScript(string name, string type)
     {
         // todo: add check of existng file
         // and mb list of names of files
@@ -19,7 +19,7 @@ public class PythonScriptManager : MonoBehaviour
         ProcessStartInfo psi = new ProcessStartInfo
         {
             FileName = @"C:\Users\Viktoria\AppData\Local\Programs\Python\Python314\python.exe", // or "python"
-            Arguments = @$"D:\ITMO_diploma\evolutionary_algorithm_agents_in_environment\Assets\Scripts\Tests\py\plot_{name}.py",
+            Arguments = @$"D:\ITMO_diploma\evolutionary_algorithm_agents_in_environment\Assets\Scripts\Tests\py\plot_{name}_{type}.py",
             UseShellExecute = false,
             RedirectStandardOutput = false,
             RedirectStandardError = false,

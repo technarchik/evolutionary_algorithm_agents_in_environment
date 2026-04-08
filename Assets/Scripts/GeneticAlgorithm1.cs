@@ -82,10 +82,15 @@ public class GeneticAlgorithm1 : MonoBehaviour
     [SerializeField] private Benchmark benchmarkPredator;
     [SerializeField] private Benchmark benchmarkHerbivore;
 
+    // Logging Data of Animals
+    List<AnimalLogData> predatorLogData = new List<AnimalLogData>();
+    List<AnimalLogData> herbivoreLogData = new List<AnimalLogData>();
+
+
     private void Awake()
     {
         // initializing log and benchmark objects
-        csvLogger = new CSVLogger(this);
+        csvLogger = new CSVLogger();
         benchmarkPredator.Init("predator");
         benchmarkHerbivore.Init("herbivore");
 
@@ -253,112 +258,83 @@ public class GeneticAlgorithm1 : MonoBehaviour
 
     public void StepOfGeneration()
     {
-        //if (oneEraMode && env.era < 1)
-        //{
-            Debug.Log($"Зашло в генерацию");
-            if (env.currentGenerationInEnv != 0)
+        if (env.currentGenerationInEnv != 0)
+        {
+            CalculateHPPredator();
+            CalculateHPHerbivore();
+        }
+
+        // count fitnesses for animals
+        EvaluateFitnessPredator();
+        EvaluateFitnessHerbivore();
+
+        // logging
+        csvLogger.WritePredators(predators, env, predatorLogData);
+        csvLogger.WriteHerbivores(herbivores, env, herbivoreLogData);
+
+        // BENCHMARKS
+        BenchmarkPredator();
+        BenchmarkHerbivore();
+
+        // evolution of animals
+        EvolvePredator();
+        EvolveHerbivore();
+
+        // (de)buffing the stamina every staminaUpdateInterval
+        if (env.currentGenerationInEnv % staminaUpdateInterval == 0)
+        {
+            // ChangeStamina();
+            ChangeStamina(predators);
+            ChangeStamina(herbivores);
+        }
+
+        // for presenting the best animal
+        if (env.currentGenerationInEnv + 1 >= env.generationMax && !eraPauseActive)
+        {
+            bestPredator = FindBestAnimal(predators);
+            bestHerbivore = FindBestAnimal(herbivores);
+
+            HighlightBestAnimal(predators, bestPredator, Color.yellow);
+            HighlightBestAnimal(herbivores, bestHerbivore, Color.yellow);
+
+            Debug.Log($"--------- END OF ERA {env.era} ---------");
+            LogBestAnimal(bestPredator);
+            LogBestAnimal(bestHerbivore);
+
+            BenchmarkBestAnimals();
+
+            if (oneEraMode)
             {
-                CalculateHPPredator();
-                CalculateHPHerbivore();
-            }
-
-            // count fitnesses for animals
-            EvaluateFitnessPredator();
-            EvaluateFitnessHerbivore();
-
-            // logging
-            csvLogger.WritePredators(predators, env);
-            csvLogger.WriteHerbivores(herbivores, env);
-
-            // BENCHMARKS
-            BenchmarkPredator();
-            BenchmarkHerbivore();
-
-            // evolution of animals
-            EvolvePredator();
-            EvolveHerbivore();
-
-            // (de)buffing the stamina every staminaUpdateInterval
-            if (env.currentGenerationInEnv % staminaUpdateInterval == 0)
-            {
-                // ChangeStamina();
-                ChangeStamina(predators);
-                ChangeStamina(herbivores);
-            }
-
-            // for presenting the best animal
-            if (env.currentGenerationInEnv + 1 >= env.generationMax && !eraPauseActive)
-            {
-                bestPredator = FindBestAnimal(predators);
-                bestHerbivore = FindBestAnimal(herbivores);
-
-                HighlightBestAnimal(predators, bestPredator, Color.yellow);
-                HighlightBestAnimal(herbivores, bestHerbivore, Color.yellow);
-
-                Debug.Log($"--------- END OF ERA {env.era} ---------");
-                LogBestAnimal(bestPredator);
-                LogBestAnimal(bestHerbivore);
-
-                BenchmarkBestAnimals();
-
-                if (oneEraMode)
+                // (!) python script starts only one time
+                if (!plotAlreadyStarted)
                 {
-                    // ВАЖНО: запускаем Python только один раз
-                    if (!plotAlreadyStarted)
-                    {
-                        plotAlreadyStarted = true;
-                        pythonScriptManager.StartPyScript("fitness");
-                    }
-
-                    simulationFinished = true;
-                    simulationIsRunning = false;
-                    return;
+                    plotAlreadyStarted = true;
+                    pythonScriptManager.StartPyScript("fitness", "predator");
+                    pythonScriptManager.StartPyScript("stdDev", "predator");
+                    pythonScriptManager.StartPyScript("fitness", "herbivore");
+                    pythonScriptManager.StartPyScript("stdDev", "herbivore");
                 }
 
-                StartCoroutine(WaitAndStartNewEra());
+                simulationFinished = true;
+                simulationIsRunning = false;
                 return;
             }
-            //if (env.currentGenerationInEnv + 1 >= env.generationMax && !eraPauseActive)
-            //{
-            //    // looking for the bests
-            //    bestPredator = FindBestAnimal(predators);
-            //    bestHerbivore = FindBestAnimal(herbivores);
 
-            //    // highlighting
-            //    HighlightBestAnimal(predators, bestPredator, Color.yellow);
-            //    HighlightBestAnimal(herbivores, bestHerbivore, Color.yellow);
+            StartCoroutine(WaitAndStartNewEra());
+            return;
+        }
 
-            //    // log
-            //    Debug.Log($"--------- END OF ERA {env.era} ---------");
-            //    LogBestAnimal(bestPredator);
-            //    LogBestAnimal(bestHerbivore);
+        foreach (var predator in predators)
+            predator.UpdateUI();
 
-            //    // BENCHMARKS
-            //    BenchmarkBestAnimals();
+        foreach (var herbivore in herbivores)
+            herbivore.UpdateUI();
 
-            //    StartCoroutine(WaitAndStartNewEra());
-            //    return;
-            //}
+        // writing genes to new population
+        ApplyNextGeneration(predators, genesNextGenPredators);
+        ApplyNextGeneration(herbivores, genesNextGenHerbivores);
 
-            foreach (var predator in predators)
-                predator.UpdateUI();
-
-            foreach (var herbivore in herbivores)
-                herbivore.UpdateUI();
-
-            // writing genes to new population
-            ApplyNextGeneration(predators, genesNextGenPredators);
-            ApplyNextGeneration(herbivores, genesNextGenHerbivores);
-
-            env.NextGeneration();
-        //}
-
-        // showing the plots
-        //if (env.era == 1 && !plotAlreadyStarted)
-        //{
-        //    plotAlreadyStarted = true;
-        //    pythonScriptManager.StartPyScript("fitness");
-        //}
+        env.NextGeneration();
     }
 
     IEnumerator WaitAndStartNewEra()
@@ -531,6 +507,8 @@ public class GeneticAlgorithm1 : MonoBehaviour
 
     void EvaluateFitnessPredator()
     {
+        predatorLogData.Clear();
+
         foreach (var predator in predators)
         {
             // must count, what important for predators?
@@ -540,13 +518,12 @@ public class GeneticAlgorithm1 : MonoBehaviour
             float speedN = Mathf.Clamp01(predator.speed / speedRange.max);
             float staminaN = Mathf.Clamp01(predator.stamina / staminaRange.max);
             float hpLoseN = Mathf.Clamp01(hpLose / 100);
+
             float hpPenalty = 0f;
             float abilitiesBonus = 0f;
             float eatN = 0f;
-            float deltaEat = 0f;
+            float deltaEat = env.eatPredator - predator.eatNeed;
             float eatPenalty = 0f;
-
-            deltaEat = env.eatPredator - predator.eatNeed;
 
             if (deltaEat < 0)
             {
@@ -556,6 +533,7 @@ public class GeneticAlgorithm1 : MonoBehaviour
                     eatN = Mathf.Clamp01(predator.eatNeed / env.eatPred_Range_Medium.max);
                 else if (env.difficultyMode == DifficultyMode.hardMode)
                     eatN = Mathf.Clamp01(predator.eatNeed / env.eatPred_Range_Hard.max);
+                
                 eatPenalty = Mathf.Exp(eatN * eatWeight);
             }
 
@@ -565,6 +543,20 @@ public class GeneticAlgorithm1 : MonoBehaviour
             predator.score = (predator.score - hpPenalty + abilitiesBonus - eatPenalty);
 
             Debug.Log($"PREDATOR - SCORE: {predator.score} ||| speedN: {speedN} | staminaN: {staminaN} | hpLoseN: {hpLoseN} | eatN: {eatN} ||| abilitiesBonus: {abilitiesBonus} | hpPenalty: {hpPenalty} | eatPenalty: {eatPenalty}");
+
+            // SAVING IN LOGDATA
+            predatorLogData.Add(new AnimalLogData
+            {
+                speedN = speedN,
+                staminaN = staminaN,
+                hpLoseN = hpLoseN,
+                eatN = eatN,
+                abilitiesBonus = abilitiesBonus,
+                hpPenalty = hpPenalty,
+                eatPenalty = eatPenalty,
+                fatSaveBonus = 0f,
+                deltaFreeEatN = 0f
+            });
         }
     }
 
@@ -610,6 +602,20 @@ public class GeneticAlgorithm1 : MonoBehaviour
             herbivore.score = (herbivore.score - hpPenalty + abilitiesBonus + fatSaveBonus);
 
             Debug.Log($"HERBIVORE - SCORE: {herbivore.score} ||| speedN: {speedN} | staminaN: {staminaN} | hpLoseN: {hpLoseN}  ||| abilitiesBonus: {abilitiesBonus} | hpPenalty: {hpPenalty} | fatSaveBonus: {fatSaveBonus}");
+
+            // SAVING IN LOGDATA
+               herbivoreLogData.Add(new AnimalLogData
+            {
+                speedN = speedN,
+                staminaN = staminaN,
+                hpLoseN = hpLoseN,
+                eatN = 0f,
+                abilitiesBonus = abilitiesBonus,
+                hpPenalty = hpPenalty,
+                eatPenalty = 0f,
+                fatSaveBonus = fatSaveBonus,
+                deltaFreeEatN = deltaFreeEatN
+            });
         }
     }
 
